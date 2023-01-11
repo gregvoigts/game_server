@@ -1,16 +1,27 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:server/network.dart';
 import 'package:shared_models/shared_models.dart';
 
 const monsterCount = 5;
 GameState gameState = GameState();
+Isolate? connReciver;
+Network? network;
 void main(List<String> arguments) async {
   for (var i = 0; i < monsterCount; i++) {
     gameState.spawnMonster();
   }
 
-  // bind the socket server to an address and port
+  connReciver = await Isolate.spawn(listenForNewConnections, "");
+
+  network = Network(
+      await RawDatagramSocket.bind(InternetAddress.anyIPv4, Network.udpPort));
+}
+
+void listenForNewConnections(dynamic msg) async {
+// bind the socket server to an address and port
   final server = await ServerSocket.bind(InternetAddress.anyIPv4, 4567);
 
   // listen for clent connections to the server
