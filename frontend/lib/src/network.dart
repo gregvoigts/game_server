@@ -1,0 +1,3 @@
+void connectToServer() {}
+
+void sendAction() {}

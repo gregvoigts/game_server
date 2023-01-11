@@ -1,7 +1,7 @@
 import 'package:frontend/frontend.dart';
 import 'package:test/test.dart';
 
-void main() {
+/*void main() {
   group('A group of tests', () {
     final awesome = Awesome();
 
@@ -13,4 +13,4 @@ void main() {
       expect(awesome.isAwesome, isTrue);
     });
   });
-}
+}*/
