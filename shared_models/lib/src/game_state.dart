@@ -1,5 +1,7 @@
 import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:shared_models/shared_models.dart';
 import 'package:shared_models/src/monster.dart';
 import 'package:shared_models/src/player.dart';
 
@@ -19,12 +21,41 @@ class GameState {
   int monsterCount = 0;
   bool gameRunning = true;
 
+  List<int> serialize() {
+    var list = List<int>.empty(growable: true);
+    list.addAll([playerCount, monsterCount, gameRunning ? 1 : 0]);
+    for (var yPos = 0; yPos < size; yPos++) {
+      for (var xPos = 0; xPos < size; xPos++) {
+        if (field[yPos][xPos] != null) {
+          list.addAll([yPos, xPos]);
+          list.addAll(field[yPos][xPos]!.serialize());
+        }
+      }
+    }
+    return list;
+  }
+
+  GameState();
+
+  GameState._private(this.playerCount, this.monsterCount, this.gameRunning);
+
+  factory GameState.deserialize(Uint8List data) {
+    var gameState = GameState._private(data[0], data[1], data[2] == 1);
+    int index = 3;
+    while (index < data.length) {
+      gameState.field[data[index]][data[index + 1]] =
+          Entity.deserialize(data.sublist(index + 2, index + 8));
+      index += 8;
+    }
+    return gameState;
+  }
+
   bool spawnPlayer() {
     var p = _spawnPoint();
     if (p == null) {
       return false;
     }
-    var newPlayer = Player(p);
+    var newPlayer = Player(p, playerCount);
     field[p.y][p.x] = newPlayer;
     playerCount += 1;
     return true;

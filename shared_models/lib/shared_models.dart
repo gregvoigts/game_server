@@ -8,5 +8,6 @@ export 'src/game_state.dart';
 export 'src/monster.dart';
 export 'src/player.dart';
 export 'src/util.dart';
+export 'src/actions.dart';
 
 // TODO: Export any libraries intended for clients of this package.

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:shared_models/shared_models.dart';
 
 class Network {
   static const udpPort = 25569;
@@ -14,15 +15,18 @@ class Network {
 
   void _sendAll(List<int> data) async {
     for (var ip in clientIps) {
-      udpSocket.send(data, ip, 25569);
+      udpSocket.send(data, ip, 25568);
     }
+  }
+
+  void sendGameState(GameState state) async {
+    _sendAll(state.serialize());
   }
 
   void listen(void Function(Uint8List data) handle) {
     udpSocket.listen((event) {
       Datagram? datagram = udpSocket.receive();
       if (datagram == null) return;
-      //TODO: Maybe deserilaze Data
       handle(datagram.data);
     });
   }

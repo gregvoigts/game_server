@@ -14,55 +14,40 @@ void main(List<String> arguments) async {
     gameState.spawnMonster();
   }
 
-  connReciver = await Isolate.spawn(listenForNewConnections, "");
+  ReceivePort newConnPort = ReceivePort();
+  newConnPort.listen((message) {
+    if (network != null) {
+      gameState.spawnPlayer();
+      network!.addClientIp(message);
+      network!.sendGameState(gameState);
+      print("addedclient");
+    }
+  });
+  connReciver =
+      await Isolate.spawn(listenForNewConnections, newConnPort.sendPort);
 
   network = Network(
       await RawDatagramSocket.bind(InternetAddress.anyIPv4, Network.udpPort));
+
+  network!.listen((data) {
+    var action = Action.deserialize(data);
+    print(action);
+  });
 }
 
-void listenForNewConnections(dynamic msg) async {
+void listenForNewConnections(SendPort sendPort) async {
 // bind the socket server to an address and port
-  final server = await ServerSocket.bind(InternetAddress.anyIPv4, 4567);
-
+  final server = await ServerSocket.bind(InternetAddress.anyIPv4, 25569);
+  print("Server listen for new Clients");
   // listen for clent connections to the server
   server.listen((client) {
-    handleConnection(client);
+    handleConnection(client, sendPort);
   });
 }
 
-void handleConnection(Socket client) {
+void handleConnection(Socket client, SendPort sendPort) {
   print('Connection from'
       ' ${client.remoteAddress.address}:${client.remotePort}');
-
-  client.write(gameState);
+  sendPort.send(client.remoteAddress);
+  client.write(200);
 }
-
-/*void createUDPSocket() async {
-  //Step#1 ----------------Creating socket-----------------
-  //IP address on network
-  final InternetAddress internetAddress = InternetAddress.anyIPv4; //InternetAddress("192.168.3.143");
-  //Port on network
-  final int port=25569;
-  //Binding with socket(IP and port)
-  RawDatagramSocket socket = await RawDatagramSocket.bind(internetAddress, port);
-
-  //Step#2 ------------send message on socket---------------------
-  print('Sending from ${socket.address.address}:${socket.port}');
-  socket.send('This is message from sender through UDP\n'.codeUnits, InternetAddress.loopbackIPv4, uniCastPort);
-
-  //Step#1 ----------------Creating socket-----------------
-  //IP address on network
-  final InternetAddress internetAddress = InternetAddress.anyIPv4; //InternetAddress("192.168.3.143");
-  //Binding with socket(IP and port)
-  RawDatagramSocket socket = await RawDatagramSocket.bind(internetAddress, uniCastPort);
-
-  //Step#2 ------------Start listening a socket(IP,Port)---------------------
-  print('Going to start listening a socket(${socket.address.address}:${socket.port})');
-  socket.listen((RawSocketEvent event){
-    Datagram? datagram = socket.receive();
-    if (datagram == null) return;
-    String message = String.fromCharCodes(datagram.data).trim();
-    print('From ${datagram.address.address}:${datagram.port}, Message: $message');
-  });
-
-}*/

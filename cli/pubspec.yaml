@@ -12,5 +12,7 @@ environment:
 dev_dependencies:
   shared_models:
     path: ../shared_models
+  frontend:
+    path: ../frontend
   lints: ^2.0.0
   test: ^1.16.0
