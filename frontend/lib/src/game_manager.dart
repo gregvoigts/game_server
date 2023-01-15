@@ -9,7 +9,7 @@ import 'package:shared_models/shared_models.dart';
 class GameManager extends Observable {
   GameState? _state;
   Network? network;
-  int? playerId;
+  int? _playerId;
 
   void init() async {
     network = Network(
@@ -19,10 +19,19 @@ class GameManager extends Observable {
 
   GameState? get state => _state;
 
+  set playerId(int value) {
+    _playerId = value;
+    notify();
+  }
+
   void handleDataUpdates(Uint8List data) async {
     _state = GameState.deserialize(data);
     print(_state);
     notify();
+  }
+
+  bool isMe(int playerId) {
+    return _playerId == playerId;
   }
 
   Player? _getOwn() {
@@ -35,7 +44,7 @@ class GameManager extends Observable {
           var entity = state!.field[yPos][xPos]!;
           if (entity.runtimeType == Player) {
             entity as Player;
-            if (entity.playerId == playerId) {
+            if (entity.playerId == _playerId) {
               return entity;
             }
           }

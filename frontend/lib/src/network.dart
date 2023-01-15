@@ -28,7 +28,7 @@ class Network {
         // Set game State
         var serverData = ServerAction.deserialize(data);
         if (serverData.runtimeType == SendId) {
-          gm.playerId == (serverData as SendId).playerId;
+          gm.playerId = (serverData as SendId).playerId;
           print('Set player id: ${serverData.playerId}');
         } else {
           print(serverData);

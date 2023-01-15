@@ -5,5 +5,6 @@ library frontend;
 
 export 'src/game_manager.dart';
 export 'src/network.dart';
+export 'src/observe.dart';
 
 // TODO: Export any libraries intended for clients of this package.

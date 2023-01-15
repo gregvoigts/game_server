@@ -1,5 +1,5 @@
 abstract class Observable {
-  List<Observer> _observers = [];
+  final List<Observer> _observers = [];
 
   Observable();
 
