@@ -22,6 +22,13 @@ class GameState {
   int monsterCount = 0;
   bool gameRunning = true;
 
+  bool isValidPosition(Point<int> position) => !(position.x >= size || position.y >= size || position.x < 0 || position.y < 0);
+
+  Entity? getField(Point<int> position) {
+    if(!isValidPosition(position)) assert(false, 'Invalid field-position!');
+    return field[position.y][position.x];
+  }
+
   List<int> serialize() {
     var list = List<int>.empty(growable: true);
     list.addAll([playerCount, monsterCount, gameRunning ? 1 : 0]);

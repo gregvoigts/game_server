@@ -55,8 +55,10 @@ void handleConnection(Socket client) {
 }
 
 void handleAction(Action action, ClientInfo client) {
-  print('Got Action : $action from $client');
-  Entity? target = gameState.field[action.destination.y][action.destination.x];
+  print('Got Action : ${action.type} from player ${client.player.playerId}');
+  if(!gameState.isValidPosition(action.destination)) return;
+  Entity? target = gameState.getField(action.destination);
+
   switch(action.type) {
     case ActionType.heal:
       if(target == null || target.runtimeType != Player) break;
