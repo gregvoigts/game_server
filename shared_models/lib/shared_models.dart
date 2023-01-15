@@ -9,5 +9,6 @@ export 'src/monster.dart';
 export 'src/player.dart';
 export 'src/util.dart';
 export 'src/actions.dart';
+export 'src/server_actions.dart';
 
 // TODO: Export any libraries intended for clients of this package.

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:server/client_info.dart';
 import 'package:server/network.dart';
 import 'package:shared_models/shared_models.dart';
 
@@ -14,17 +15,7 @@ void main(List<String> arguments) async {
     gameState.spawnMonster();
   }
 
-  ReceivePort newConnPort = ReceivePort();
-  newConnPort.listen((message) {
-    if (network != null) {
-      gameState.spawnPlayer();
-      network!.addClientIp(message);
-      network!.sendGameState(gameState);
-      print("addedclient");
-    }
-  });
-  connReciver =
-      await Isolate.spawn(listenForNewConnections, newConnPort.sendPort);
+  listenForNewConnections();
 
   network = Network(
       await RawDatagramSocket.bind(InternetAddress.anyIPv4, Network.udpPort));
@@ -35,19 +26,29 @@ void main(List<String> arguments) async {
   });
 }
 
-void listenForNewConnections(SendPort sendPort) async {
+void listenForNewConnections() async {
 // bind the socket server to an address and port
   final server = await ServerSocket.bind(InternetAddress.anyIPv4, 25569);
   print("Server listen for new Clients");
   // listen for clent connections to the server
   server.listen((client) {
-    handleConnection(client, sendPort);
+    handleConnection(client);
   });
 }
 
-void handleConnection(Socket client, SendPort sendPort) {
+void handleConnection(Socket client) {
   print('Connection from'
       ' ${client.remoteAddress.address}:${client.remotePort}');
-  sendPort.send(client.remoteAddress);
-  client.write(200);
+  if (network != null) {
+    var player = gameState.spawnPlayer();
+    if (player == null) {
+      client.destroy();
+      return;
+    }
+    network!.addClient(ClientInfo(client.remoteAddress, client, player));
+    network!.sendGameState(gameState);
+    print('addedclient with ID ${player.playerId}');
+  } else {
+    client.destroy();
+  }
 }

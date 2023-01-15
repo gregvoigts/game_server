@@ -51,15 +51,15 @@ class GameState {
     return gameState;
   }
 
-  bool spawnPlayer() {
+  Player? spawnPlayer() {
     var p = _spawnPoint();
     if (p == null) {
-      return false;
+      return null;
     }
     var newPlayer = Player(p, playerCount);
     field[p.y][p.x] = newPlayer;
     playerCount += 1;
-    return true;
+    return newPlayer;
   }
 
   bool spawnMonster() {

@@ -1,21 +1,24 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:server/client_info.dart';
 import 'package:shared_models/shared_models.dart';
 
 class Network {
   static const udpPort = 25569;
-  var clientIps = List<InternetAddress>.empty(growable: true);
+  var clients = List<ClientInfo>.empty(growable: true);
   late RawDatagramSocket udpSocket;
 
   Network(this.udpSocket);
 
-  void addClientIp(InternetAddress clientIp) {
-    clientIps.add(clientIp);
+  void addClient(ClientInfo clientInfo) async {
+    clients.add(clientInfo);
+    clientInfo.clientTcp.add(SendId(clientInfo.player.playerId).serialize());
+    await clientInfo.clientTcp.flush();
   }
 
   void _sendAll(List<int> data) async {
-    for (var ip in clientIps) {
-      udpSocket.send(data, ip, 25568);
+    for (var client in clients) {
+      udpSocket.send(data, client.clientIp, client.clientUdpPort);
     }
   }
 

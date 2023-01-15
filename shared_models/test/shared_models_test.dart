@@ -128,4 +128,22 @@ void main() {
       expect(attackDes.type == attack.type, isTrue);
     });
   });
+
+  group('Serialize/Deserialize ServerActions', () {
+    var send = SendId(1);
+
+    test('Test serialize', () {
+      var sendSer = send.serialize();
+      expect(sendSer[0] == send.type.index, isTrue);
+      expect(sendSer[1] == send.playerId, isTrue);
+    });
+
+    test('Test deserialize', () {
+      var sendSer = send.serialize();
+      var sendDes = ServerAction.deserialize(Uint8List.fromList(sendSer));
+      expect(sendDes.type == send.type, isTrue);
+      sendDes as SendId;
+      expect(sendDes.playerId == send.playerId, isTrue);
+    });
+  });
 }

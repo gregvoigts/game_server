@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -25,8 +26,13 @@ class Network {
       // handle data from the server
       (Uint8List data) {
         // Set game State
-        print(data);
-        tcpSocket.destroy();
+        var serverData = ServerAction.deserialize(data);
+        if (serverData.runtimeType == SendId) {
+          gm.playerId == (serverData as SendId).playerId;
+          print('Set player id: ${serverData.playerId}');
+        } else {
+          print(serverData);
+        }
       },
 
       // handle errors
