@@ -3,10 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:frontend/src/network.dart';
+import 'package:frontend/src/observe.dart';
 import 'package:shared_models/shared_models.dart';
 
-class GameManager {
-  GameState? state;
+class GameManager extends Observable {
+  GameState? _state;
   Network? network;
   int? playerId;
 
@@ -16,9 +17,12 @@ class GameManager {
     network!.connectToServer();
   }
 
+  GameState? get state => _state;
+
   void handleDataUpdates(Uint8List data) async {
-    state = GameState.deserialize(data);
-    print(state);
+    _state = GameState.deserialize(data);
+    print(_state);
+    notify();
   }
 
   void move(Direction dir) {
