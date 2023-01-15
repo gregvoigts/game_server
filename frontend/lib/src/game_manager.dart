@@ -21,12 +21,35 @@ class GameManager {
     print(state);
   }
 
+  Player? _getOwn() {
+    if (state == null) {
+      return null;
+    }
+    for (var yPos = 0; yPos < GameState.size; yPos++) {
+      for (var xPos = 0; xPos < GameState.size; xPos++) {
+        if (state!.field[yPos][xPos] != null) {
+          var entity = state!.field[yPos][xPos]!;
+          if (entity.runtimeType == Player) {
+            entity as Player;
+            if (entity.playerId == playerId) {
+              return entity;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   void move(Direction dir) {
     if (network == null) {
       return;
     }
-
-    var action = Move(Point(0, 0));
+    var player = _getOwn();
+    if (player == null) {
+      return;
+    }
+    var action = Move(player.pos + Util.getVector(dir));
     network!.sendAction(action);
   }
 
@@ -46,5 +69,3 @@ class GameManager {
     network!.sendAction(action);
   }
 }
-
-enum Direction { left, right, up, down }
