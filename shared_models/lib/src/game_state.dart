@@ -16,7 +16,8 @@ class GameState {
   static const healRange = 5;
   static const moveRange = 1;
 
-  var field = List.filled(size, List<Entity?>.filled(size, null));
+  var field = List.generate(size, (index) => List<Entity?>.filled(size, null),
+      growable: false);
   int playerCount = 0;
   int monsterCount = 0;
   bool gameRunning = true;
@@ -44,8 +45,8 @@ class GameState {
     int index = 3;
     while (index < data.length) {
       gameState.field[data[index]][data[index + 1]] =
-          Entity.deserialize(data.sublist(index + 2, index + 8));
-      index += 8;
+          Entity.deserialize(data.sublist(index + 2, index + 9));
+      index += 9;
     }
     return gameState;
   }

@@ -11,7 +11,7 @@ class Player extends Entity {
 
   Player.deserilaized(
       this.playerId, Point<int> pos, int health, int ap, int maxHealth)
-      : super.deserilaized(pos, EntityType.player, health, ap, maxHealth);
+      : super.deserialized(pos, EntityType.player, health, ap, maxHealth);
 
   void heal(int power) {
     health += power;

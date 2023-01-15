@@ -10,7 +10,7 @@ class Monster extends Entity {
   }
 
   Monster.deserilaized(Point<int> pos, int health, int ap, int maxHealth)
-      : super.deserilaized(pos, EntityType.monster, health, ap, maxHealth);
+      : super.deserialized(pos, EntityType.monster, health, ap, maxHealth);
 
   @override
   List<int> serialize() {

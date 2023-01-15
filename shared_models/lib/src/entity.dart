@@ -13,7 +13,7 @@ abstract class Entity {
 
   Entity(this.pos, this.type);
 
-  Entity.deserilaized(
+  Entity.deserialized(
       this.pos, this.type, this.health, this.ap, this.maxHealth);
 
   /// attack this entity with the given power
@@ -32,11 +32,11 @@ abstract class Entity {
   }
 
   factory Entity.deserialize(Uint8List data) {
-    switch (EntityType.values[data[2]]) {
-      case EntityType.monster:
-        return Player.deserilaized(
-            data[7], Point(data[4], data[5]), data[1], data[2], data[3]);
+    switch (EntityType.values[data[0]]) {
       case EntityType.player:
+        return Player.deserilaized(
+            data[6], Point(data[4], data[5]), data[1], data[2], data[3]);
+      case EntityType.monster:
         return Monster.deserilaized(
             Point(data[4], data[5]), data[1], data[2], data[3]);
     }

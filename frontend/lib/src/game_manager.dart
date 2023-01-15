@@ -25,6 +25,7 @@ class GameManager {
     if (network == null) {
       return;
     }
+    //TODO:
     var action = Move(Point(0, 0));
     network!.sendAction(action);
   }

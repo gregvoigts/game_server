@@ -25,7 +25,7 @@ class Network {
       // handle data from the server
       (Uint8List data) {
         // Set game State
-        gm.handleDataUpdates(data);
+        print(data);
         tcpSocket.destroy();
       },
 
