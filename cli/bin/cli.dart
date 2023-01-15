@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:frontend/frontend.dart';
@@ -13,7 +14,7 @@ class CLI extends Observer {
     _manager.registerObserver(this);
   }
 
-  void update() {
+  void update() async {
     var state = _manager.state;
     if (state != null) {
       var buffer = StringBuffer();
@@ -49,4 +50,10 @@ void main(List<String> arguments) async {
   GameManager manager = GameManager();
 
   CLI(manager);
+  await Future.delayed(const Duration(seconds: 5));
+  while (true) {
+    await Future.delayed(const Duration(seconds: 3));
+    var num = Random().nextInt(4);
+    manager.move(Direction.values[num]);
+  }
 }

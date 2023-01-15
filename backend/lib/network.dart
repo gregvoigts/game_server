@@ -18,7 +18,11 @@ class Network {
 
   void _sendAll(List<int> data) async {
     for (var client in clients) {
-      udpSocket.send(data, client.clientIp, client.clientUdpPort);
+      try {
+        udpSocket.send(data, client.clientIp, client.clientUdpPort);
+      } on SocketException {
+        print("client unreachable");
+      }
     }
   }
 
@@ -26,24 +30,22 @@ class Network {
     _sendAll(state.serialize());
   }
 
-  void listen(void Function(Uint8List datan, ClientInfo sender) handle) {
+  void listen(void Function(Action action, ClientInfo client) handle) {
     udpSocket.listen((event) {
       Datagram? datagram = udpSocket.receive();
       if (datagram == null) return;
-      var client = getClientInfo(datagram.address);
+      var action = Action.deserialize(datagram.data);
+      var client = getClientInfo(action.playerId);
       if (client == null) return;
-      handle(datagram.data, client);
+      handle(action, client);
     });
   }
 
-  ClientInfo? getClientInfo(InternetAddress clientIp) {
+  ClientInfo? getClientInfo(int id) {
     //TODO what if a client can't be found?
-    try{
-      return clients.firstWhere((client) => 
-        client.clientIp == clientIp
-      );
-    }
-    on StateError{
+    try {
+      return clients.firstWhere((client) => client.player.playerId == id);
+    } on StateError {
       return null;
     }
   }

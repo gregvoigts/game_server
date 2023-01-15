@@ -13,6 +13,7 @@ class Network {
   GameManager gm;
 
   Network(this.socket, this.gm) {
+    print(socket.port);
     socket.listen((event) {
       Datagram? datagram = socket.receive();
       if (datagram == null) return;
@@ -47,6 +48,9 @@ class Network {
         tcpSocket.destroy();
       },
     );
+
+    tcpSocket.write(socket.port);
+    await tcpSocket.flush();
   }
 
   void sendAction(Action action) {

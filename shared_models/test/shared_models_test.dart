@@ -91,9 +91,9 @@ void main() {
   });
 
   group('Serialize/Deserialize Actions', () {
-    var move = Move(Point(2, 2));
-    var heal = Heal(Point(3, 1));
-    var attack = Attack(Point(4, 6));
+    var move = Move(Point(2, 2), 1);
+    var heal = Heal(Point(3, 1), 1);
+    var attack = Attack(Point(4, 6), 1);
     test('Test serialize', () {
       var moveSer = move.serialize();
       expect(moveSer[0] == move.destination.x, isTrue);

@@ -12,8 +12,8 @@ class GameManager extends Observable {
   int? _playerId;
 
   void init() async {
-    network = Network(
-        await RawDatagramSocket.bind(InternetAddress.anyIPv4, 25568), this);
+    network =
+        Network(await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0), this);
     network!.connectToServer();
   }
 
@@ -26,6 +26,7 @@ class GameManager extends Observable {
 
   void handleDataUpdates(Uint8List data) async {
     _state = GameState.deserialize(data);
+    print(_state);
     notify();
   }
 
@@ -61,7 +62,7 @@ class GameManager extends Observable {
     if (player == null) {
       return;
     }
-    var action = Move(player.pos + Util.getVector(dir));
+    var action = Move(player.pos + Util.getVector(dir), _playerId ?? -1);
     network!.sendAction(action);
   }
 
@@ -69,7 +70,7 @@ class GameManager extends Observable {
     if (network == null) {
       return;
     }
-    var action = Heal(playerToHeal);
+    var action = Heal(playerToHeal, _playerId ?? -1);
     network!.sendAction(action);
   }
 
@@ -77,7 +78,7 @@ class GameManager extends Observable {
     if (network == null) {
       return;
     }
-    var action = Attack(entityToAttack);
+    var action = Attack(entityToAttack, _playerId ?? -1);
     network!.sendAction(action);
   }
 }

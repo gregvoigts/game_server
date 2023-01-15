@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
@@ -20,8 +21,7 @@ void main(List<String> arguments) async {
   network = Network(
       await RawDatagramSocket.bind(InternetAddress.anyIPv4, Network.udpPort));
 
-  network!.listen((data, client) {
-    var action = Action.deserialize(data);
+  network!.listen((action, client) {
     handleAction(action, client);
     network!.sendGameState(gameState);
   });
@@ -40,37 +40,60 @@ void listenForNewConnections() async {
 void handleConnection(Socket client) {
   print('Connection from'
       ' ${client.remoteAddress.address}:${client.remotePort}');
-  if (network != null) {
-    var player = gameState.spawnPlayer();
-    if (player == null) {
+  bool isFirst = true;
+  client.listen(
+    (Uint8List data) {
+      var port = int.parse(utf8.decode(data));
+      print(port);
+      if (isFirst) {
+        if (network != null) {
+          var player = gameState.spawnPlayer();
+          if (player == null) {
+            client.destroy();
+            return;
+          }
+          network!.addClient(ClientInfo(client.remoteAddress, client, player,
+              clientUdpPort: port));
+          network!.sendGameState(gameState);
+          print('addedclient with ID ${player.playerId}');
+        } else {
+          client.destroy();
+        }
+        isFirst = false;
+      } else {
+        print(data);
+      }
+    }, // handle errors
+    onError: (error) {
+      print(error);
       client.destroy();
-      return;
-    }
-    network!.addClient(ClientInfo(client.remoteAddress, client, player));
-    network!.sendGameState(gameState);
-    print('addedclient with ID ${player.playerId}');
-  } else {
-    client.destroy();
-  }
+    },
+
+    // handle server ending connection
+    onDone: () {
+      print('client left.');
+      client.destroy();
+    },
+  );
 }
 
 void handleAction(Action action, ClientInfo client) {
   print('Got Action : ${action.type} from player ${client.player.playerId}');
-  if(!gameState.isValidPosition(action.destination)) return;
+  if (!gameState.isValidPosition(action.destination)) return;
   Entity? target = gameState.getField(action.destination);
 
-  switch(action.type) {
+  switch (action.type) {
     case ActionType.heal:
-      if(target == null || target.runtimeType != Player) break;
+      if (target == null || target.runtimeType != Player) break;
       target as Player;
       gameState.heal(client.player, target);
       break;
     case ActionType.attack:
-      if(target == null || target.runtimeType != Monster) break;
+      if (target == null || target.runtimeType != Monster) break;
       gameState.attack(client.player, target);
       break;
     case ActionType.move:
-      if(target != null) break;
+      if (target != null) break;
       gameState.move(client.player, action.destination);
       break;
   }
