@@ -20,9 +20,10 @@ void main(List<String> arguments) async {
   network = Network(
       await RawDatagramSocket.bind(InternetAddress.anyIPv4, Network.udpPort));
 
-  network!.listen((data) {
+  network!.listen((data, client) {
     var action = Action.deserialize(data);
-    print(action);
+    handleAction(action, client);
+    network!.sendGameState(gameState);
   });
 }
 
@@ -50,5 +51,25 @@ void handleConnection(Socket client) {
     print('addedclient with ID ${player.playerId}');
   } else {
     client.destroy();
+  }
+}
+
+void handleAction(Action action, ClientInfo client) {
+  print('Got Action : $action from $client');
+  Entity? target = gameState.field[action.destination.y][action.destination.x];
+  switch(action.type) {
+    case ActionType.heal:
+      if(target == null || target.runtimeType != Player) break;
+      target as Player;
+      gameState.heal(client.player, target);
+      break;
+    case ActionType.attack:
+      if(target == null || target.runtimeType != Monster) break;
+      gameState.attack(client.player, target);
+      break;
+    case ActionType.move:
+      if(target != null) break;
+      gameState.move(client.player, action.destination);
+      break;
   }
 }

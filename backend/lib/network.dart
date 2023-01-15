@@ -26,11 +26,25 @@ class Network {
     _sendAll(state.serialize());
   }
 
-  void listen(void Function(Uint8List data) handle) {
+  void listen(void Function(Uint8List datan, ClientInfo sender) handle) {
     udpSocket.listen((event) {
       Datagram? datagram = udpSocket.receive();
       if (datagram == null) return;
-      handle(datagram.data);
+      var client = getClientInfo(datagram.address);
+      if (client == null) return;
+      handle(datagram.data, client);
     });
+  }
+
+  ClientInfo? getClientInfo(InternetAddress clientIp) {
+    //TODO what if a client can't be found?
+    try{
+      return clients.firstWhere((client) => 
+        client.clientIp == clientIp
+      );
+    }
+    on StateError{
+      return null;
+    }
   }
 }

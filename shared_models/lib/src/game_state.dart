@@ -123,10 +123,9 @@ class GameState {
     return true;
   }
 
-  bool move(Player player, int xPos, int yPos) {
-    var newPos = Point(xPos, yPos);
+  bool move(Player player, Point<int> newPos) {
     var dist = Util.calcDistance(player.pos, newPos);
-    if (dist > moveRange) {
+    if (dist > moveRange || field[newPos.y][newPos.x] != null) {
       return false;
     }
     field[player.pos.y][player.pos.x] = null;
