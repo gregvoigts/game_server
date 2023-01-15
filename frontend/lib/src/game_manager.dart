@@ -26,7 +26,6 @@ class GameManager extends Observable {
 
   void handleDataUpdates(Uint8List data) async {
     _state = GameState.deserialize(data);
-    print(_state);
     notify();
   }
 

@@ -31,6 +31,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  shared_models:
+    path: ../shared_models
+  frontend:
+    path: ../frontend
 
 
   # The following adds the Cupertino Icons font to your application.
