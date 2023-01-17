@@ -18,10 +18,8 @@ class Network {
 
   void _sendAll(List<int> data) async {
     for (var client in clients) {
-      try {
+      if (!client.isOffline) {
         udpSocket.send(data, client.clientIp, client.clientUdpPort);
-      } on SocketException {
-        print("client unreachable");
       }
     }
   }
@@ -38,6 +36,8 @@ class Network {
       var client = getClientInfo(action.playerId);
       if (client == null) return;
       handle(action, client);
+    }, onError: (error) {
+      print(error);
     });
   }
 
