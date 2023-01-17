@@ -26,7 +26,6 @@ class GameManager extends Observable {
 
   void handleDataUpdates(Uint8List data) async {
     _state = GameState.deserialize(data);
-    print(_state);
     notify();
   }
 
@@ -34,7 +33,7 @@ class GameManager extends Observable {
     return _playerId == playerId;
   }
 
-  Player? _getOwn() {
+  Player? getOwn() {
     if (state == null) {
       return null;
     }
@@ -54,11 +53,39 @@ class GameManager extends Observable {
     return null;
   }
 
+  /// Search in circles arround Player for other Entitys of type T
+  T? getFirstInRange<T extends Entity>(Point<int> center, int range) {
+    if (_state == null) {
+      return null;
+    }
+    // Start with radius 1 and increment
+    for (int r = 1; r <= range; r++) {
+      // Search for +r to -r
+      for (int x = r; x >= -r; x--) {
+        // y is the radius - x
+        var v = center + Point<int>(x, r - x.abs());
+        if (_state!.isValidPosition(v) &&
+            _state!.field[v.y][v.x].runtimeType == T) {
+          return _state!.field[v.y][v.x] as T;
+        }
+        // search at negation of y if y != 0
+        if (v.y != 0) {
+          var v1 = center + Point(x, (r - x.abs()) * -1);
+          if (_state!.isValidPosition(v1) &&
+              _state!.field[v1.y][v1.x].runtimeType == T) {
+            return _state!.field[v1.y][v1.x] as T;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   void move(Direction dir) {
     if (network == null) {
       return;
     }
-    var player = _getOwn();
+    var player = getOwn();
     if (player == null) {
       return;
     }
