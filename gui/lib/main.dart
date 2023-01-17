@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/frontend.dart';
+import 'package:gui/entity.dart';
 import 'package:shared_models/shared_models.dart';
 
 void main() {
@@ -101,10 +102,27 @@ class _MyHomePageState extends State<MyHomePage> implements Observer {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text(
-                Visualize.visualize(widget.manager) ?? "",
-                style: const TextStyle(fontFamily: "Courier New"),
-              ),
+              SizedBox(
+                  height: 800,
+                  width: 800,
+                  child: GridView.count(
+                    scrollDirection: Axis.horizontal,
+                    crossAxisCount: 25,
+                    children: List.generate(25 * 25, (index) {
+                      var x = index % 25;
+                      var y = ((index - x) / 25).round();
+                      var entity = widget.manager.state?.field[y][x];
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(),
+                        ),
+                        child: EntityView(
+                          entity: entity,
+                          manager: widget.manager,
+                        ),
+                      );
+                    }),
+                  )),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
