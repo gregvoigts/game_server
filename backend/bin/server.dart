@@ -41,6 +41,7 @@ void handleConnection(Socket client) {
   print('Connection from'
       ' ${client.remoteAddress.address}:${client.remotePort}');
   bool isFirst = true;
+  ClientInfo? c;
   client.listen(
     (Uint8List data) {
       var port = int.parse(utf8.decode(data));
@@ -52,8 +53,9 @@ void handleConnection(Socket client) {
             client.destroy();
             return;
           }
-          network!.addClient(ClientInfo(client.remoteAddress, client, player,
-              clientUdpPort: port));
+          c = ClientInfo(client.remoteAddress, client, player,
+              clientUdpPort: port);
+          network!.addClient(c!);
           network!.sendGameState(gameState);
           print('addedclient with ID ${player.playerId}');
         } else {
@@ -66,12 +68,14 @@ void handleConnection(Socket client) {
     }, // handle errors
     onError: (error) {
       print(error);
-      client.destroy();
     },
 
     // handle server ending connection
     onDone: () {
-      print('client left.');
+      print('client offline. ${c?.player.playerId}');
+      if (c != null) {
+        c!.isOffline = true;
+      }
       client.destroy();
     },
   );

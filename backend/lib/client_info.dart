@@ -6,6 +6,7 @@ class ClientInfo {
   Socket clientTcp;
   int clientUdpPort;
   Player player;
+  bool isOffline = false;
 
   ClientInfo(this.clientIp, this.clientTcp, this.player,
       {this.clientUdpPort = 25568});
