@@ -14,35 +14,9 @@ class CLI extends Observer {
     _manager.registerObserver(this);
   }
 
+  @override
   void update() async {
-    var state = _manager.state;
-    if (state != null) {
-      var buffer = StringBuffer();
-      for (var row in state.field) {
-        buffer.write('|');
-        for (var entity in row) {
-          if (entity != null) {
-            switch (entity.type) {
-              case EntityType.monster:
-                buffer.write('M');
-                break;
-              case EntityType.player:
-                entity as Player;
-                _manager.isMe(entity.playerId)
-                    ? buffer.write('O')
-                    : buffer.write('P');
-                break;
-              default:
-            }
-          } else {
-            buffer.write('_');
-          }
-          buffer.write('|');
-        }
-        buffer.write('\n');
-      }
-      print(buffer.toString());
-    }
+    print(Visualize.visualize(_manager));
   }
 }
 
