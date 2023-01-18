@@ -1,0 +1,60 @@
+version: '3.3'
+
+networks:
+  game_server:
+    name: game_server
+
+services:
+
+  node_0:
+    image: game/server:latest
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+    networks:
+      - game_server
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=game_server
+
+      - traefik.tcp.routers.game_nodes.rule=HostSNI(`*`)
+      - traefik.tcp.routers.game_nodes.entrypoints=game-server-tcp
+      - traefik.tcp.services.game_nodes.loadbalancer.server.port=25569
+
+      - traefik.udp.routers.game_nodes.entrypoints=game-server-udp
+      - traefik.udp.services.game_nodes.loadbalancer.server.port=25569
+
+  node_1:
+    image: game/server:latest
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+    networks:
+      - game_server
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=game_server
+
+      - traefik.udp.routers.game_nodes.entrypoints=game-server-udp
+      - traefik.udp.services.game_nodes.loadbalancer.server.port=25569
+
+      - traefik.tcp.routers.game_nodes.rule=HostSNI(`*`)
+      - traefik.tcp.routers.game_nodes.entrypoints=game-server-tcp
+      - traefik.tcp.services.game_nodes.loadbalancer.server.port=25569
+
+  proxy:
+    container_name: proxy
+    image: traefik:v2.6
+    networks:
+      - game_server
+    ports:
+      - 25569:25569
+      - 8080:8080
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik.yaml:/etc/traefik/traefik.yaml
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=game_server
+      - traefik.http.routers.dashboard.rule=Host(`*`)
+    restart: unless-stopped

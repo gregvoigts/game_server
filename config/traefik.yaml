@@ -1,0 +1,17 @@
+api:
+  dashboard: true  
+  insecure: true  
+
+entryPoints:
+  game-server-udp:
+    address: ":25569/udp"
+  game-server-tcp:
+    address: ":25569"
+
+providers:
+  docker:
+    exposedByDefault: false  # Default is true
+  file:
+    # watch for dynamic configuration changes
+    directory: /etc/traefik
+    watch: true
