@@ -34,7 +34,7 @@ class PlayerBot {
       await Future.delayed(const Duration(seconds: 2));
     }
     // Start gameloop
-    while (true) {
+    while (_manager.state?.gameRunning ?? false) {
       await Future.delayed(Duration(seconds: Random().nextInt(3) + 2));
       if (_manager.state != null) {
         var own = _manager.getOwn();
@@ -71,6 +71,7 @@ class PlayerBot {
         assert(false, 'nothing to do... how strange?!');
       }
     }
+    print("Game Finished");
   }
 }
 

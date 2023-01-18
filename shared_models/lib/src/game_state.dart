@@ -2,32 +2,40 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:shared_models/shared_models.dart';
-import 'package:shared_models/src/monster.dart';
-import 'package:shared_models/src/player.dart';
 
-import 'entity.dart';
-import 'util.dart';
-
+/// Represents a gamestate.
 class GameState {
+  /// Game grid size.
   static const int size = 25;
+
+  /// Number of all fields.
   static const int fields = size * size;
 
+  /// Attack range for all entities.
   static const attackRange = 2;
+
+  /// Heal range for players.
   static const healRange = 5;
+
+  /// Move range for players.
   static const moveRange = 1;
 
+  /// Holds the whole game area.
   var field = List.generate(size, (index) => List<Entity?>.filled(size, null),
       growable: false);
+
+  /// Counts the remaining player.
   int playerCount = 0;
+
+  /// Counts the remaining monster.
   int monsterCount = 0;
+
+  /// Whether the game is still/already running.
   bool gameRunning = true;
 
-  bool isValidPosition(Point<int> position) => !(position.x >= size || position.y >= size || position.x < 0 || position.y < 0);
+  GameState();
 
-  Entity? getField(Point<int> position) {
-    if(!isValidPosition(position)) assert(false, 'Invalid field-position!');
-    return field[position.y][position.x];
-  }
+  GameState._private(this.playerCount, this.monsterCount, this.gameRunning);
 
   List<int> serialize() {
     var list = List<int>.empty(growable: true);
@@ -43,10 +51,6 @@ class GameState {
     return list;
   }
 
-  GameState();
-
-  GameState._private(this.playerCount, this.monsterCount, this.gameRunning);
-
   factory GameState.deserialize(Uint8List data) {
     var gameState = GameState._private(data[0], data[1], data[2] == 1);
     int index = 3;
@@ -58,6 +62,23 @@ class GameState {
     return gameState;
   }
 
+  /// Checks if a given points is in the bounds of the game area.
+  bool isValidPosition(Point<int> position) => !(position.x >= size ||
+      position.y >= size ||
+      position.x < 0 ||
+      position.y < 0);
+
+  /// Returns the entity at a given coordiante or null if the position is empty.
+  ///
+  /// Invalid position leads to error.
+  Entity? getField(Point<int> position) {
+    if (!isValidPosition(position)) assert(false, 'Invalid field-position!');
+    return field[position.y][position.x];
+  }
+
+  /// Spawns a player on a random free position on the board.
+  ///
+  /// Returns true if a player has been spawned.
   Player? spawnPlayer() {
     var p = _spawnPoint();
     if (p == null) {
@@ -69,6 +90,9 @@ class GameState {
     return newPlayer;
   }
 
+  /// Spawns a monster on a random free position on the board.
+  ///
+  /// Returns true if a monster has been spawned.
   bool spawnMonster() {
     var p = _spawnPoint();
     if (p == null) {
@@ -80,6 +104,9 @@ class GameState {
     return true;
   }
 
+  /// Returns a random free position on the board.
+  ///
+  /// Returns null if no more positions are free.
   Point<int>? _spawnPoint() {
     if (playerCount + monsterCount >= fields) return null;
 
@@ -97,12 +124,11 @@ class GameState {
     return null;
   }
 
-  bool attack(Entity attacker, Entity attacked) {
-    var dist = Util.calcDistance(attacker.pos, attacked.pos);
-    if (dist > attackRange) {
-      return false;
-    }
-
+  /// Executes an attack from attacker to attacked.
+  ///
+  /// Updates monster/player count if the attacked died.
+  /// Does not check if an attack is allowed!
+  void attack(Entity attacker, Entity attacked) {
     if (attacked.striked(attacker.ap)) {
       // dead
       field[attacked.pos.y][attacked.pos.x] = null;
@@ -118,26 +144,45 @@ class GameState {
         gameRunning = false;
       }
     }
+  }
+
+  /// Returns true an attack from attacker against attacked is allowed.
+  bool canAttack(Entity attacker, Entity attacked) {
+    var dist = Util.calcDistance(attacker.pos, attacked.pos);
+    if (dist > attackRange) return false;
+
     return true;
   }
 
-  bool heal(Player healer, Player healed) {
-    var dist = Util.calcDistance(healer.pos, healed.pos);
-    if (dist > healRange) {
-      return false;
-    }
+  /// Executes an heal from healer to healed.
+  ///
+  /// Does not check if a heal is allowed!
+  void heal(Player healer, Player healed) {
     healed.heal(healer.ap);
+  }
+
+  /// Returns true if healer can heal healed.
+  bool canHeal(Player healer, Player healed) {
+    var dist = Util.calcDistance(healer.pos, healed.pos);
+    if (dist > healRange) return false;
+
     return true;
   }
 
-  bool move(Player player, Point<int> newPos) {
-    var dist = Util.calcDistance(player.pos, newPos);
-    if (dist > moveRange || field[newPos.y][newPos.x] != null) {
-      return false;
-    }
+  /// Moves the player to a given position.
+  ///
+  /// Does not check if a move is allowed!
+  void move(Player player, Point<int> newPos) {
     field[player.pos.y][player.pos.x] = null;
     player.pos = newPos;
     field[newPos.y][newPos.x] = player;
+  }
+
+  /// Returns true if a move of player to newPos is allowed.
+  bool canMove(Player player, Point<int> newPos) {
+    var dist = Util.calcDistance(player.pos, newPos);
+    if (dist > moveRange || field[newPos.y][newPos.x] != null) return false;
+
     return true;
   }
 }

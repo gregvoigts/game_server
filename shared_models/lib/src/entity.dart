@@ -16,8 +16,9 @@ abstract class Entity {
   Entity.deserialized(
       this.pos, this.type, this.health, this.ap, this.maxHealth);
 
-  /// attack this entity with the given power
-  /// Returns true if entity is dead
+  /// Attacks this entity with the given power.
+  ///
+  /// Returns true if entity is dead.
   bool striked(int strength) {
     health -= strength;
     if (health <= 0) {
