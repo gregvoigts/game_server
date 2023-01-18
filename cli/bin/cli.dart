@@ -41,24 +41,34 @@ class PlayerBot {
         if (own == null) {
           return;
         }
-        // First try to attack
-        var target =
-            _manager.getFirstInRange<Monster>(own.pos, GameState.attackRange);
-        if (target != null) {
-          _manager.attack(target.pos);
-          continue;
-        }
-        // Then try to Heal
+        // Try to heal player with 50% hp or less
         var healTarget =
             _manager.getFirstInRange<Player>(own.pos, GameState.healRange);
-        if (healTarget != null && healTarget.health != healTarget.maxHealth) {
+        if (healTarget != null &&
+            healTarget.health <= healTarget.maxHealth * 0.5) {
           _manager.heal(healTarget.pos);
           continue;
         }
 
-        // If nothing works move
-        var num = Random().nextInt(4);
-        _manager.move(Direction.values[num]);
+        // Then find the closest monster
+        var target = _manager.getFirstInRange<Monster>(own.pos, -1);
+        if (target != null) {
+          // and attack if in range ...
+          if (Util.calcDistance(own.pos, target.pos) <= GameState.attackRange) {
+            _manager.attack(target.pos);
+            continue;
+          }
+          // or move closer to the monster
+          var moves = target.pos - own.pos;
+          if (moves.x.abs() > moves.y.abs()) {
+            _manager.moveTo(Point((moves.x / moves.x.abs()).ceil(), 0));
+          } else {
+            _manager.moveTo(Point(0, (moves.y / moves.y.abs()).ceil()));
+          }
+        }
+        // there should at least be a monster to move to...
+        // otherwise the game should be over
+        assert(false, 'nothing to do... how strange?!');
       }
     }
   }

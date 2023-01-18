@@ -59,24 +59,32 @@ class GameManager extends Observable {
       return null;
     }
     // Start with radius 1 and increment
-    for (int r = 1; r <= range; r++) {
+    int maxRadius = range >= 0 ? range : 1;
+    for (int r = 1; r <= maxRadius; r++) {
+      // search the hole field
+      if (range < 0) maxRadius++;
+      var foundValidField = false;
       // Search for +r to -r
       for (int x = r; x >= -r; x--) {
         // y is the radius - x
         var v = center + Point<int>(x, r - x.abs());
-        if (_state!.isValidPosition(v) &&
-            _state!.field[v.y][v.x].runtimeType == T) {
-          return _state!.field[v.y][v.x] as T;
-        }
-        // search at negation of y if y != 0
-        if (v.y != 0) {
-          var v1 = center + Point(x, (r - x.abs()) * -1);
-          if (_state!.isValidPosition(v1) &&
-              _state!.field[v1.y][v1.x].runtimeType == T) {
-            return _state!.field[v1.y][v1.x] as T;
+        if (_state!.isValidPosition(v)) {
+          foundValidField = true;
+          if (_state!.field[v.y][v.x].runtimeType == T) {
+            return _state!.field[v.y][v.x] as T;
           }
         }
+        // search at negation of y if y != 0
+        if (v.y == 0) continue;
+        var v1 = center + Point(x, (r - x.abs()) * -1);
+        if (!_state!.isValidPosition(v1)) continue;
+        foundValidField = true;
+        if (_state!.field[v1.y][v1.x].runtimeType == T) {
+          return _state!.field[v1.y][v1.x] as T;
+        }
       }
+      //end search if there wasn't found a single valid field in range
+      if (!foundValidField) return null;
     }
     return null;
   }
@@ -90,6 +98,18 @@ class GameManager extends Observable {
       return;
     }
     var action = Move(player.pos + Util.getVector(dir), _playerId ?? -1);
+    network!.sendAction(action);
+  }
+
+  void moveTo(Point<int> vec) {
+    if (network == null) {
+      return;
+    }
+    var player = getOwn();
+    if (player == null) {
+      return;
+    }
+    var action = Move(player.pos + vec, _playerId ?? -1);
     network!.sendAction(action);
   }
 
