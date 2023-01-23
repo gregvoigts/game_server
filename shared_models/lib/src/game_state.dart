@@ -37,6 +37,11 @@ class GameState {
 
   GameState._private(this.playerCount, this.monsterCount, this.gameRunning);
 
+  /// Serialize GameState
+  /// First add all int Values of the State
+  /// Then add a Part for ever Entity
+  /// The first to indezies are for the Position of the Entity in the Grid
+  /// Then add the ByteList for a serialized Entity
   List<int> serialize() {
     var list = List<int>.empty(growable: true);
     list.addAll([playerCount, monsterCount, gameRunning ? 1 : 0]);
@@ -51,6 +56,9 @@ class GameState {
     return list;
   }
 
+  /// Creates GameState back from serialized Data
+  /// Every entity is exactly 9 Bytes
+  /// 7 Bytes for the Entity 2 Bytes for the Position
   factory GameState.deserialize(Uint8List data) {
     var gameState = GameState._private(data[0], data[1], data[2] == 1);
     int index = 3;

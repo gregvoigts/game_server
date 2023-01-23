@@ -5,15 +5,18 @@ import 'dart:typed_data';
 
 import 'package:shared_models/shared_models.dart';
 
+/// Abstract class for all Actions to Sync between Nodes
 abstract class SyncAction {
   SyncType type;
 
   SyncAction(this.type);
 
+  ///Serialize all Information from Abstract Class
   List<int> serialize() {
     return [type.index];
   }
 
+  /// Deserialize Data back to any SyncAction specified by the first data byte
   factory SyncAction.deserialize(Uint8List data) {
     switch (SyncType.values[data[0]]) {
       case SyncType.hurt:
@@ -33,6 +36,7 @@ abstract class SyncAction {
   }
 }
 
+/// Abstract class for all Syncs during the Game
 abstract class GameActionSync extends SyncAction {
   int entityId;
 

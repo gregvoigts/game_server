@@ -6,11 +6,18 @@ import 'package:frontend/src/network.dart';
 import 'package:frontend/src/observe.dart';
 import 'package:shared_models/shared_models.dart';
 
+/// Class with all Parts of the Game
 class GameManager extends Observable {
+  ///Current State
   GameState? _state;
+
+  /// Network class to communicate with Server
   Network? network;
+
+  /// Player id of this Client
   int? _playerId;
 
+  /// Initialize the Network component
   void init() async {
     network = Network(
         await RawDatagramSocket.bind(InternetAddress("192.168.178.157"), 0),
@@ -25,6 +32,8 @@ class GameManager extends Observable {
     notify();
   }
 
+  /// handels Gamestates recieved from Server
+  /// Sends update to UI
   void handleDataUpdates(Uint8List data) async {
     _state = GameState.deserialize(data);
     notify();
@@ -34,6 +43,7 @@ class GameManager extends Observable {
     return _playerId == playerId;
   }
 
+  /// Search the GameField for the Entity with the Clients Id
   Player? getOwn() {
     if (state == null) {
       return null;
@@ -90,6 +100,7 @@ class GameManager extends Observable {
     return null;
   }
 
+  /// Prepares Action for a Move of the Player and sends to Server
   void move(Direction dir) {
     if (network == null) {
       return;
@@ -114,6 +125,7 @@ class GameManager extends Observable {
     network!.sendAction(action);
   }
 
+  /// Prepares Action for a Heal from Clients player to another and sends to Server
   void heal(Point<int> playerToHeal) {
     if (network == null) {
       return;
@@ -122,6 +134,7 @@ class GameManager extends Observable {
     network!.sendAction(action);
   }
 
+  /// Prepares Action for a Attack from Clients player to another and sends to Server
   void attack(Point<int> entityToAttack) {
     if (network == null) {
       return;

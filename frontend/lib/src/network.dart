@@ -6,10 +6,18 @@ import 'dart:typed_data';
 import 'package:frontend/src/game_manager.dart';
 import 'package:shared_models/shared_models.dart';
 
+/// Class handels all network traffik for the Frontend
 class Network {
+  /// Server address
   static const host = "192.168.178.157";
+
+  /// UDP Port of the Server
   static const port = 25569;
+
+  /// UDP Socket of the Client
   RawDatagramSocket socket;
+
+  /// Reverenz to the GameManager
   GameManager gm;
 
   Network(this.socket, this.gm) {
@@ -21,6 +29,7 @@ class Network {
     });
   }
 
+  ///Methode to Connect to Server with TCP
   void connectToServer() async {
     var tcpSocket = await Socket.connect(host, port);
     tcpSocket.listen(
@@ -53,6 +62,7 @@ class Network {
     await tcpSocket.flush();
   }
 
+  /// Send Action to Server with UDP
   void sendAction(Action action) {
     socket.send(action.serialize(), InternetAddress(host), port);
   }

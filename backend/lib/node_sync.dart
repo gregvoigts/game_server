@@ -46,11 +46,13 @@ class NodeSync {
                 node.destroy();
                 return;
               }
+              // Dont accept Connection if node has already Connection
               if (nodeList[address.host]!) {
                 print('Connection always present: ${address.host}.');
                 node.destroy();
                 return;
               }
+              // Accept Connection
               nodeList[address.host] = true;
               listenSocket(node);
               nodes.add(node);
@@ -80,6 +82,7 @@ class NodeSync {
     );
   }
 
+  // Send SyncAction to all Connected Nodes
   void sendToAll(SyncAction action) {
     for (var sock in nodes) {
       print("send update to ${sock.remoteAddress.host}");

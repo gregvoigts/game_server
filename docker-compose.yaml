@@ -5,28 +5,31 @@ networks:
     name: game_server
 
 services:
-
+# First GameNode
   node_0:
     image: game/server:latest
     build:
       context: ./
       dockerfile: ./backend/Dockerfile
+    # Set First id for this Node and Hostname
     environment:
       - OWN_HOSTNAME=game_server-node_0-1.game_server
       - FIRST_ID = 0
     networks:
       - game_server
     labels:
+      # Basic traefik labels
       - traefik.enable=true
       - traefik.docker.network=game_server
-
+      # Labels for TCP router and loadbalancer
       - traefik.tcp.routers.game_nodes.rule=HostSNI(`*`)
       - traefik.tcp.routers.game_nodes.entrypoints=game-server-tcp
       - traefik.tcp.services.game_nodes.loadbalancer.server.port=25569
-
+      # Labels for UDP router and loadbalancer
       - traefik.udp.routers.game_nodes.entrypoints=game-server-udp
       - traefik.udp.services.game_nodes.loadbalancer.server.port=25569
 
+  # Copy of first Service with diffrent env
   node_1:
     image: game/server:latest
     build:
@@ -37,6 +40,7 @@ services:
       - FIRST_ID=1
     networks:
       - game_server
+    # Depends on first Node, so nodes dont start at the same time
     depends_on:
       - node_0
     labels:
@@ -50,20 +54,28 @@ services:
       - traefik.tcp.routers.game_nodes.entrypoints=game-server-tcp
       - traefik.tcp.services.game_nodes.loadbalancer.server.port=25569
 
+  # Proxy with Loadbalancer
   proxy:
     container_name: proxy
     image: traefik:v2.6
     networks:
       - game_server
     ports:
+      # UDP and TCP Ports for the Loadbalancer
       - 25569:25569
       - 25569:25569/udp
+      # Port for the Dashboard
       - 8080:8080
     volumes:
+      # Docker Socket so traefik can recieve Information about running containers
       - //var/run/docker.sock:/var/run/docker.sock:ro
+      # Load config file as volume
       - ./config/traefik.yaml:/etc/traefik/traefik.yaml
     labels:
+      # Basic traefik Labels
       - traefik.enable=true
       - traefik.docker.network=game_server
+
+      # Http router for Traefik Dashboard 
       - traefik.http.routers.dashboard.rule=Host(`*`)
     restart: unless-stopped

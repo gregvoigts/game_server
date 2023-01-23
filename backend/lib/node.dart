@@ -13,6 +13,7 @@ class Node {
   /// Monster count to spawn
   static const monsterCount = 5;
 
+  /// Count of Server Nodes
   static const nodes = 5;
 
   /// Global Game_state
@@ -31,6 +32,7 @@ class Node {
     nextId = int.parse(Platform.environment["FIRST_ID"]!);
   }
 
+  /// Creates the GameState Object and Spawns Monster
   void createGameState() {
     gameState = GameState();
     for (var i = 0; i < monsterCount; i++) {
@@ -57,11 +59,15 @@ class Node {
     });
   }
 
+  /// Function to run the Connection Prozess to other nodes
   Future<void> connectNodes() async {
     nodeSync = NodeSync(handleSync, gameState);
+    // Establish Connections
+    // If no other node is running yet, Create GameState on this Node
     if (await nodeSync.establishConnections()) {
       createGameState();
     }
+    // ASk for GameState until get it
     int selector = 0;
     while (gameState == null) {
       print("dont have GameState yet");
@@ -167,25 +173,32 @@ class Node {
     }
   }
 
+  /// Handle SyncActions from other nodes
   void handleSync(SyncAction action, Socket node) {
     print('Got Sync : ${action.type} from node ${node.address.host}');
     if (action.type == SyncType.askGameState && gameState != null) {
+      // Send GameState to node Asking
       node.add(SendGamestate(gameState!).serialize());
       return;
     }
     if (action.type == SyncType.gameState) {
+      // Set gameState to the recieved one
       gameState = (action as SendGamestate).state;
       return;
     }
     if (action.type == SyncType.newClient) {
+      // Create new ClientInfo for connected Client
       action as NewClient;
       network.clients.add(ClientInfo(action.clientIp, null, action.player,
           clientUdpPort: action.udpPort));
+      // Spawn player in field
+      // TODO: if field is blocked, send Move Action to next free Position
       gameState!.field[action.player.pos.y][action.player.pos.x] =
           action.player;
       gameState!.playerCount++;
       return;
     }
+    // Get Entity from Action by ID
     action as GameActionSync;
     Entity? e;
     for (var row in gameState!.field) {
@@ -201,6 +214,7 @@ class Node {
         }
       }
     }
+    // Execute Actions on GameState
     switch (action.type) {
       case SyncType.heal:
         action as ServerHeal;
@@ -212,6 +226,8 @@ class Node {
         break;
       case SyncType.move:
         action as ServerMove;
+        // if Move action isnt allowed
+        // send command to revert move
         if (gameState!.canMove(e! as Player, action.dest)) {
           gameState!.move(e as Player, action.dest);
         } else {
