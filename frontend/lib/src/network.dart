@@ -7,7 +7,7 @@ import 'package:frontend/src/game_manager.dart';
 import 'package:shared_models/shared_models.dart';
 
 class Network {
-  static const host = "127.0.0.1";
+  static const host = "192.168.178.157";
   static const port = 25569;
   RawDatagramSocket socket;
   GameManager gm;
@@ -49,7 +49,7 @@ class Network {
       },
     );
 
-    tcpSocket.write(socket.port);
+    tcpSocket.write("${socket.address.address}:${socket.port}");
     await tcpSocket.flush();
   }
 

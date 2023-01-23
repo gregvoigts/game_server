@@ -11,6 +11,9 @@ services:
     build:
       context: ./
       dockerfile: ./backend/Dockerfile
+    environment:
+      - OWN_HOSTNAME=game_server-node_0-1.game_server
+      - FIRST_ID = 0
     networks:
       - game_server
     labels:
@@ -29,8 +32,13 @@ services:
     build:
       context: ./
       dockerfile: ./backend/Dockerfile
+    environment:
+      - OWN_HOSTNAME=game_server-node_1-1.game_server
+      - FIRST_ID=1
     networks:
       - game_server
+    depends_on:
+      - node_0
     labels:
       - traefik.enable=true
       - traefik.docker.network=game_server
@@ -49,6 +57,7 @@ services:
       - game_server
     ports:
       - 25569:25569
+      - 25569:25569/udp
       - 8080:8080
     volumes:
       - //var/run/docker.sock:/var/run/docker.sock:ro

@@ -4,18 +4,12 @@ import 'dart:typed_data';
 import 'entity.dart';
 
 class Monster extends Entity {
-  Monster(Point<int> pos) : super(pos, EntityType.monster) {
+  Monster(int id, Point<int> pos) : super(id, pos, EntityType.monster) {
     health = maxHealth = Random().nextInt(101) + 50;
     ap = Random().nextInt(21) + 5;
   }
 
-  Monster.deserilaized(Point<int> pos, int health, int ap, int maxHealth)
-      : super.deserialized(pos, EntityType.monster, health, ap, maxHealth);
-
-  @override
-  List<int> serialize() {
-    var list = super.serialize();
-    list.add(0);
-    return list;
-  }
+  Monster.deserilaized(
+      int id, Point<int> pos, int health, int ap, int maxHealth)
+      : super.deserialized(id, pos, EntityType.monster, health, ap, maxHealth);
 }

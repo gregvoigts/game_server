@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:server/client_info.dart';
 import 'package:server/network.dart';
+import 'package:server/node_sync.dart';
+import 'package:server/sync_actions.dart';
 import 'package:shared_models/shared_models.dart';
 
 ///Class with all functions and Variables a GameNode need
@@ -11,15 +13,29 @@ class Node {
   /// Monster count to spawn
   static const monsterCount = 5;
 
+  static const nodes = 5;
+
   /// Global Game_state
-  GameState gameState = GameState();
+  GameState? gameState;
 
   /// Global network manager
-  Network? network;
+  late Network network;
+
+  /// Global NodeSync
+  late NodeSync nodeSync;
+
+  /// StartId for this Node
+  late int nextId;
 
   Node() {
+    nextId = int.parse(Platform.environment["FIRST_ID"]!);
+  }
+
+  void createGameState() {
+    gameState = GameState();
     for (var i = 0; i < monsterCount; i++) {
-      gameState.spawnMonster();
+      gameState!.spawnMonster(nextId);
+      nextId += nodes;
     }
   }
 
@@ -27,6 +43,7 @@ class Node {
   ///Server listens for new Players over TCP
   ///and for Client Actions over UDP
   void start() async {
+    await connectNodes();
     listenForNewConnections();
 
     // Start the Network component
@@ -34,10 +51,26 @@ class Node {
         await RawDatagramSocket.bind(InternetAddress.anyIPv4, Network.udpPort));
 
     // Add action Handler to Network component
-    network!.listen((action, client) {
+    network.listen((action, client) {
       handleAction(action, client);
-      network!.sendGameState(gameState);
+      network.sendGameState(gameState!);
     });
+  }
+
+  Future<void> connectNodes() async {
+    nodeSync = NodeSync(handleSync, gameState);
+    if (await nodeSync.establishConnections()) {
+      createGameState();
+    }
+    int selector = 0;
+    while (gameState == null) {
+      print("dont have GameState yet");
+      nodeSync.nodes[selector].add(AskGameState().serialize());
+      await nodeSync.nodes[selector].flush();
+      await Future.delayed(Duration(milliseconds: 1000));
+      selector++;
+      selector = selector % nodeSync.nodes.length;
+    }
   }
 
   /// Init TCP socket for new Players
@@ -60,23 +93,28 @@ class Node {
     //Listen to Socket
     client.listen(
       (Uint8List data) {
-        var port = int.parse(utf8.decode(data));
-        print(port);
+        var connStr = utf8.decode(data);
+        var connAr = connStr.split(':');
+        var port = int.parse(connAr[1]);
+        print(connStr);
         // We excpect the First Message to be the clients UDP port
         if (isFirst) {
           if (network != null) {
             // After the First message spwan new Player
-            var player = gameState.spawnPlayer();
+            var player = gameState!.spawnPlayer(nextId);
+            nextId += monsterCount;
             // If no Player could be Spawned close Connection
             if (player == null) {
               client.destroy();
               return;
             }
-            c = ClientInfo(client.remoteAddress, client, player,
+            c = ClientInfo(InternetAddress(connAr[0]), client, player,
                 clientUdpPort: port);
             // Add client info and send the Updated Gamestate to all Clients
-            network!.addClient(c!);
-            network!.sendGameState(gameState);
+            network.addClient(c!);
+            network.sendGameState(gameState!);
+            nodeSync
+                .sendToAll(NewClient(c!.clientUdpPort, c!.clientIp, player));
             print('addedclient with ID ${player.playerId}');
           } else {
             // If the Network isnt
@@ -105,23 +143,83 @@ class Node {
   /// Methode to handle Actions recieved from client
   void handleAction(Action action, ClientInfo client) {
     print('Got Action : ${action.type} from player ${client.player.playerId}');
-    if (!gameState.isValidPosition(action.destination)) return;
-    Entity? target = gameState.getField(action.destination);
+    if (!gameState!.isValidPosition(action.destination)) return;
+    Entity? target = gameState!.getField(action.destination);
 
     switch (action.type) {
       case ActionType.heal:
         if (target == null || target.runtimeType != Player) break;
         target as Player;
-        gameState.heal(client.player, target);
+        nodeSync.sendToAll(ServerHeal(target.playerId, client.player.ap));
+        gameState!.heal(client.player.ap, target);
         break;
       case ActionType.attack:
         if (target == null || target.runtimeType != Monster) break;
-        gameState.attack(client.player, target);
+        nodeSync.sendToAll(ServerHurt(target.playerId, client.player.ap));
+        gameState!.attack(client.player.ap, target);
         break;
       case ActionType.move:
         if (target != null) break;
-        gameState.move(client.player, action.destination);
+        nodeSync
+            .sendToAll(ServerMove(client.player.playerId, action.destination));
+        gameState!.move(client.player, action.destination);
         break;
+    }
+  }
+
+  void handleSync(SyncAction action, Socket node) {
+    print('Got Sync : ${action.type} from node ${node.address.host}');
+    if (action.type == SyncType.askGameState && gameState != null) {
+      node.add(SendGamestate(gameState!).serialize());
+      return;
+    }
+    if (action.type == SyncType.gameState) {
+      gameState = (action as SendGamestate).state;
+      return;
+    }
+    if (action.type == SyncType.newClient) {
+      action as NewClient;
+      network.clients.add(ClientInfo(action.clientIp, null, action.player,
+          clientUdpPort: action.udpPort));
+      gameState!.field[action.player.pos.y][action.player.pos.x] =
+          action.player;
+      gameState!.playerCount++;
+      return;
+    }
+    action as GameActionSync;
+    Entity? e;
+    for (var row in gameState!.field) {
+      for (var cell in row) {
+        if (cell != null &&
+            cell.runtimeType == Player &&
+            cell.playerId == action.entityId) {
+          e = cell;
+          break;
+        }
+        if (e != null) {
+          break;
+        }
+      }
+    }
+    switch (action.type) {
+      case SyncType.heal:
+        action as ServerHeal;
+        gameState!.heal(action.power, e! as Player);
+        break;
+      case SyncType.hurt:
+        action as ServerHurt;
+        gameState!.attack(action.damage, e!);
+        break;
+      case SyncType.move:
+        action as ServerMove;
+        if (gameState!.canMove(e! as Player, action.dest)) {
+          gameState!.move(e as Player, action.dest);
+        } else {
+          nodeSync.sendToAll(ServerMove(e.playerId, e.pos));
+        }
+        break;
+      default:
+        assert(false, "Never reached");
     }
   }
 }

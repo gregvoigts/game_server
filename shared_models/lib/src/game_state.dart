@@ -79,12 +79,12 @@ class GameState {
   /// Spawns a player on a random free position on the board.
   ///
   /// Returns true if a player has been spawned.
-  Player? spawnPlayer() {
+  Player? spawnPlayer(int id) {
     var p = _spawnPoint();
     if (p == null) {
       return null;
     }
-    var newPlayer = Player(p, playerCount);
+    var newPlayer = Player(id, p);
     field[p.y][p.x] = newPlayer;
     playerCount += 1;
     return newPlayer;
@@ -93,12 +93,12 @@ class GameState {
   /// Spawns a monster on a random free position on the board.
   ///
   /// Returns true if a monster has been spawned.
-  bool spawnMonster() {
+  bool spawnMonster(int id) {
     var p = _spawnPoint();
     if (p == null) {
       return false;
     }
-    var newMonster = Monster(p);
+    var newMonster = Monster(id, p);
     field[p.y][p.x] = newMonster;
     monsterCount += 1;
     return true;
@@ -128,8 +128,8 @@ class GameState {
   ///
   /// Updates monster/player count if the attacked died.
   /// Does not check if an attack is allowed!
-  void attack(Entity attacker, Entity attacked) {
-    if (attacked.striked(attacker.ap)) {
+  void attack(int damage, Entity attacked) {
+    if (attacked.striked(damage)) {
       // dead
       field[attacked.pos.y][attacked.pos.x] = null;
       switch (attacked.type) {
@@ -157,8 +157,8 @@ class GameState {
   /// Executes an heal from healer to healed.
   ///
   /// Does not check if a heal is allowed!
-  void heal(Player healer, Player healed) {
-    healed.heal(healer.ap);
+  void heal(int power, Player healed) {
+    healed.heal(power);
   }
 
   /// Returns true if healer can heal healed.

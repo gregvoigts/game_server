@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -5,16 +6,17 @@ import 'package:shared_models/src/monster.dart';
 import 'package:shared_models/src/player.dart';
 
 abstract class Entity {
+  int playerId;
   late int health;
   late int maxHealth;
   late int ap;
   EntityType type;
   Point<int> pos;
 
-  Entity(this.pos, this.type);
+  Entity(this.playerId, this.pos, this.type);
 
   Entity.deserialized(
-      this.pos, this.type, this.health, this.ap, this.maxHealth);
+      this.playerId, this.pos, this.type, this.health, this.ap, this.maxHealth);
 
   /// Attacks this entity with the given power.
   ///
@@ -29,7 +31,7 @@ abstract class Entity {
   }
 
   List<int> serialize() {
-    return [type.index, health, ap, maxHealth, pos.x, pos.y];
+    return [type.index, health, ap, maxHealth, pos.x, pos.y, playerId];
   }
 
   factory Entity.deserialize(Uint8List data) {
@@ -39,7 +41,7 @@ abstract class Entity {
             data[6], Point(data[4], data[5]), data[1], data[2], data[3]);
       case EntityType.monster:
         return Monster.deserilaized(
-            Point(data[4], data[5]), data[1], data[2], data[3]);
+            data[6], Point(data[4], data[5]), data[1], data[2], data[3]);
     }
   }
 }

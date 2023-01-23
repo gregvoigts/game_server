@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('Serialize/Deserialize Monster', () {
-    final monster = Monster(Point(2, 2));
+    final monster = Monster(2, Point(2, 2));
 
     setUp(() {
       // Additional setup goes here.
@@ -35,7 +35,7 @@ void main() {
     });
   });
   group('Serialize/Deserialize Player', () {
-    final player = Player(Point(2, 2), 1);
+    final player = Player(1, Point(2, 2));
 
     setUp(() {
       // Additional setup goes here.
@@ -66,8 +66,8 @@ void main() {
   });
   group('Serialize/Deserialize GameState', () {
     final gameState = GameState();
-    gameState.spawnPlayer();
-    gameState.spawnMonster();
+    gameState.spawnPlayer(1);
+    gameState.spawnMonster(2);
 
     setUp(() {
       // Additional setup goes here.

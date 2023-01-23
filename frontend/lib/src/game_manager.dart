@@ -12,8 +12,9 @@ class GameManager extends Observable {
   int? _playerId;
 
   void init() async {
-    network =
-        Network(await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0), this);
+    network = Network(
+        await RawDatagramSocket.bind(InternetAddress("192.168.178.157"), 0),
+        this);
     network!.connectToServer();
   }
 

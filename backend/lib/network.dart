@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:server/client_info.dart';
 import 'package:shared_models/shared_models.dart';
 
-/// Class handeling all UDP/TCP traffic
+/// Class handeling all UDP/TCP traffic to Clients
 class Network {
   /// udpPort to listen on
   static const udpPort = 25569;
@@ -21,8 +21,8 @@ class Network {
   /// then send the client his ID over TCP
   void addClient(ClientInfo clientInfo) async {
     clients.add(clientInfo);
-    clientInfo.clientTcp.add(SendId(clientInfo.player.playerId).serialize());
-    await clientInfo.clientTcp.flush();
+    clientInfo.clientTcp?.add(SendId(clientInfo.player.playerId).serialize());
+    await clientInfo.clientTcp?.flush();
   }
 
   /// helper function to send Data to all connected Clients
