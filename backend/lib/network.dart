@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:server/client_info.dart';
@@ -39,6 +40,8 @@ class Network {
     _sendAll(state.serialize());
   }
 
+  int actions = 0;
+
   /// Register callback to handle Actions from clients
   /// Extract client Info out of List
   void listen(Future<void> Function(Action action, ClientInfo client) handle) {
@@ -46,6 +49,7 @@ class Network {
       Datagram? datagram = udpSocket.receive();
       if (datagram == null) return;
       var action = Action.deserialize(datagram.data);
+      ++actions;
       var client = getClientInfo(action.playerId);
       if (client == null) return;
       await handle(action, client);

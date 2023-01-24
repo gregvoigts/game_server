@@ -35,6 +35,9 @@ class GameManager extends Observable {
   /// Sends update to UI
   void handleDataUpdates(Uint8List data) async {
     _state = GameState.deserialize(data);
+    if (!_state!.gameRunning) {
+      print('actions received ${network!.actions}');
+    }
     notify();
   }
 

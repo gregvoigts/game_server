@@ -146,6 +146,7 @@ class Node {
         if (c != null) {
           c!.isOffline = true;
         }
+        print('counted actions ${network.actions}');
         client.destroy();
       },
     );

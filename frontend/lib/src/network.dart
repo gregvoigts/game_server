@@ -62,8 +62,11 @@ class Network {
     await tcpSocket.flush();
   }
 
+  int actions = 0;
+
   /// Send Action to Server with UDP
   void sendAction(Action action) {
+    ++actions;
     socket.send(action.serialize(), InternetAddress(host), port);
   }
 }
