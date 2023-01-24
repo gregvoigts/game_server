@@ -72,8 +72,9 @@ class Node {
     int selector = 0;
     while (gameState == null) {
       print("dont have GameState yet");
-      nodeSync.nodes[selector].add(AskGameState().serialize());
-      await nodeSync.nodes[selector].flush();
+      var sock = nodeSync.nodes.values.toList()[selector];
+      sock.add(AskGameState().serialize());
+      await sock.flush();
       await Future.delayed(Duration(milliseconds: 1000));
       selector++;
       selector = selector % nodeSync.nodes.length;

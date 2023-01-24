@@ -37,7 +37,7 @@ services:
       dockerfile: ./backend/Dockerfile
     environment:
       - OWN_HOSTNAME=game_server-node_1-1.game_server
-      - FIRST_ID=1
+      - FIRST_ID=2
     networks:
       - game_server
     # Depends on first Node, so nodes dont start at the same time

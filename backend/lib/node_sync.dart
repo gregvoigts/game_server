@@ -11,15 +11,15 @@ class NodeSync {
   /// List of all the Hostnames of nodes
   Map<String, bool> nodeList = {
     //"127.0.0.1": true,
-    "game_server-node_0-1.game_server": false,
-    "game_server-node_1-1.game_server": false,
-    "game_server-node_2-1.game_server": false,
-    "game_server-node_3-1.game_server": false,
-    "game_server-node_4-1.game_server": false
+    "game_server-node_0-1.game_server": true,
+    "game_server-node_1-1.game_server": true,
+    "game_server-node_2-1.game_server": true,
+    "game_server-node_3-1.game_server": true,
+    "game_server-node_4-1.game_server": true
   };
 
   /// List with TCP Sockets to all server Nodes
-  List<Socket> nodes = [];
+  Map<String, Socket> nodes = {};
 
   /// Methode to handle SyncActions from other nodes
   void Function(SyncAction action, Socket node) onData;
@@ -33,36 +33,45 @@ class NodeSync {
     if (!nodeList.keys.contains(ownHost)) {
       throw Exception("OWN_HOSTNAME not in list of nodes");
     }
-    nodeList[ownHost] = true;
+
+    // connect to all Nodes under your own
+    for (var key in nodeList.keys) {
+      if (key == ownHost) {
+        break;
+      }
+      nodeList[key] = false;
+    }
+
     // Start to listen for new TCP connections from other Nodes
-    ServerSocket.bind(ownHost, syncPort)
-        .then((sSocket) => sSocket.listen((node) async {
-              // Performe reverse Lookup to get hostname
-              var address = await node.remoteAddress.reverse();
-              // Search for Node in List
-              if (!nodeList.keys.contains(address.host)) {
-                // If Node isnt in List of Hostnames, dont accept connection
-                print(
-                    'Connection from not known Host: ${address.host}. Stopping connection');
-                node.destroy();
-                return;
-              }
-              // Dont accept Connection if node has already Connection
-              if (nodeList[address.host]!) {
-                print('Connection always present: ${address.host}.');
-                node.destroy();
-                return;
-              }
-              // Accept Connection
-              nodeList[address.host] = true;
-              listenSocket(node);
-              nodes.add(node);
-              // Send gameState to new Node if present
-              if (state != null) {
-                node.add(SendGamestate(state).serialize());
-              }
-              print('Connected to ${address.host}');
-            }));
+    ServerSocket.bind(ownHost, syncPort).then((sSocket) {
+      print("Listen for Nodes");
+      sSocket.listen((node) async {
+        // Performe reverse Lookup to get hostname
+        var address = await node.remoteAddress.reverse();
+        // Search for Node in List
+        if (!nodeList.keys.contains(address.host)) {
+          // If Node isnt in List of Hostnames, dont accept connection
+          print(
+              'Connection from not known Host: ${address.host}. Stopping connection');
+          node.destroy();
+          return;
+        }
+        // Dont accept Connection if node has already Connection
+        if (nodes.containsKey(address.host)) {
+          print('Connection always present: ${address.host}.');
+          node.destroy();
+          return;
+        }
+        // Accept Connection
+        listenSocket(node);
+        nodes[address.host] = node;
+        // Send gameState to new Node if present
+        if (state != null) {
+          node.add(SendGamestate(state).serialize());
+        }
+        print('Connected to ${address.host}');
+      });
+    });
   }
 
   /// This methode adds a listener to a established TCP Connection
@@ -85,7 +94,7 @@ class NodeSync {
 
   // Send SyncAction to all Connected Nodes
   Future<void> sendToAll(SyncAction action) async {
-    for (var sock in nodes) {
+    for (var sock in nodes.values) {
       //print("send update to ${sock.remoteAddress.host}");
       try {
         sock.add(action.serialize());
@@ -97,25 +106,32 @@ class NodeSync {
     }
   }
 
-  /// Methode to try to establish connections to all other running Nodes
+  /// Methode to try to establish connections to all other running Nodes under the own node
+  /// If the Late flag is set, try to connect to all Hosts
+  /// For each connection take 3 trys and wait for 50ms after each try
   /// The return value indicates if at least 1 connection could be established
-  Future<bool> establishConnections() async {
+  Future<bool> establishConnections({bool late = false}) async {
     bool ret = true;
-    var ownHost = Platform.environment["OWN_HOSTNAME"];
     for (var node in nodeList.keys) {
-      if (nodeList[node]!) {
+      if ((nodeList[node]! && !late) ||
+          node == Platform.environment["OWN_HOSTNAME"]) {
         continue;
       }
-      try {
-        var sock = await Socket.connect(node, syncPort,
-            timeout: Duration(milliseconds: 5));
-        nodeList[node] = true;
-        nodes.add(sock);
-        listenSocket(sock);
-        ret = false;
-        print('Connected to $node');
-      } on SocketException {
-        print('Node $node is not online yet');
+      var trys = 3;
+      while (trys > 0) {
+        try {
+          var sock = await Socket.connect(node, syncPort,
+              timeout: Duration(milliseconds: 5));
+          nodes[node] = sock;
+          listenSocket(sock);
+          ret = false;
+          print('Connected to $node');
+          break;
+        } on SocketException {
+          print('Node $node is not online yet');
+        }
+        trys--;
+        await Future.delayed(Duration(milliseconds: 50));
       }
     }
     return ret;
