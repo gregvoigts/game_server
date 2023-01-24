@@ -104,6 +104,9 @@ class Node {
         var connAr = connStr.split(':');
         var port = int.parse(connAr[1]);
         print(connStr);
+        if (connAr[0] == "localhost" || connAr[1] == "127.0.0.1") {
+          connAr[0] = "host.docker.internal";
+        }
         // We excpect the First Message to be the clients UDP port
         if (isFirst) {
           if (network != null) {

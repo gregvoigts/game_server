@@ -9,7 +9,7 @@ import 'package:shared_models/shared_models.dart';
 /// Class handels all network traffik for the Frontend
 class Network {
   /// Server address
-  static const host = "192.168.178.157";
+  static const host = "127.0.0.1";
 
   /// UDP Port of the Server
   static const port = 25569;
