@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:mutex/mutex.dart';
 import 'package:server/sync_actions.dart';
 import 'package:shared_models/shared_models.dart';
 
@@ -11,11 +12,11 @@ class NodeSync {
   /// List of all the Hostnames of nodes
   Map<String, bool> nodeList = {
     //"127.0.0.1": true,
-    "game_server-node_0-1.game_server": true,
-    "game_server-node_1-1.game_server": true,
-    "game_server-node_2-1.game_server": true,
-    "game_server-node_3-1.game_server": true,
-    "game_server-node_4-1.game_server": true
+    "node_0.game_server": true,
+    "node_1.game_server": true,
+    "node_2.game_server": true,
+    "node_3.game_server": true,
+    "node_4.game_server": true
   };
 
   /// List with TCP Sockets to all server Nodes
@@ -92,18 +93,24 @@ class NodeSync {
     );
   }
 
+  final sockMut = Mutex();
   // Send SyncAction to all Connected Nodes
   Future<void> sendToAll(SyncAction action) async {
-    for (var sock in nodes.values) {
-      //print("send update to ${sock.remoteAddress.host}");
-      try {
-        sock.add(action.serialize());
-        await sock.flush();
-      } on Exception catch (e) {
-        print(e);
-        print(action.serialize());
+    await sockMut.protect(() async {
+      for (var sock in nodes.values) {
+        //print("send update to ${sock.remoteAddress.host}");
+        try {
+          sock.add(action.serialize());
+          await sock.flush();
+        } on Exception catch (e) {
+          print(e);
+          print(action.serialize());
+        } finally {}
       }
-    }
+      return Future.delayed(
+        Duration(milliseconds: 1),
+      );
+    });
   }
 
   /// Methode to try to establish connections to all other running Nodes under the own node

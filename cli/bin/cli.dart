@@ -35,7 +35,7 @@ class PlayerBot {
     }
     // Start gameloop
     while (_manager.state?.gameRunning ?? false) {
-      await Future.delayed(Duration(seconds: Random().nextInt(3) + 2));
+      await Future.delayed(Duration(seconds: Random().nextInt(3) + 3));
       if (_manager.state != null) {
         var own = _manager.getOwn();
         if (own == null) {
