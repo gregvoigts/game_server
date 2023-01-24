@@ -8,12 +8,13 @@ services:
   # First GameNode
   node_0:
     image: game/server:latest
+    container_name: node_0
     build:
       context: ./
       dockerfile: ./backend/Dockerfile
     # Set First id for this Node and Hostname
     environment:
-      - OWN_HOSTNAME=game_server-node_0-1.game_server
+      - OWN_HOSTNAME=node_0.game_server
       - FIRST_ID=1
     networks:
       - game_server
@@ -32,17 +33,93 @@ services:
   # Copy of first Service with diffrent env
   node_1:
     image: game/server:latest
+    container_name: node_1
     build:
       context: ./
       dockerfile: ./backend/Dockerfile
     environment:
-      - OWN_HOSTNAME=game_server-node_1-1.game_server
+      - OWN_HOSTNAME=node_1.game_server
       - FIRST_ID=2
     networks:
       - game_server
     # Depends on first Node, so nodes dont start at the same time
     depends_on:
       - node_0
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=game_server
+
+      - traefik.udp.routers.game_nodes.entrypoints=game-server-udp
+      - traefik.udp.services.game_nodes.loadbalancer.server.port=25569
+
+      - traefik.tcp.routers.game_nodes.rule=HostSNI(`*`)
+      - traefik.tcp.routers.game_nodes.entrypoints=game-server-tcp
+      - traefik.tcp.services.game_nodes.loadbalancer.server.port=25569
+
+  node_2:
+    image: game/server:latest
+    container_name: node_2
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+    environment:
+      - OWN_HOSTNAME=node_2.game_server
+      - FIRST_ID=3
+    networks:
+      - game_server
+    # Depends on first Node, so nodes dont start at the same time
+    depends_on:
+      - node_1
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=game_server
+
+      - traefik.udp.routers.game_nodes.entrypoints=game-server-udp
+      - traefik.udp.services.game_nodes.loadbalancer.server.port=25569
+
+      - traefik.tcp.routers.game_nodes.rule=HostSNI(`*`)
+      - traefik.tcp.routers.game_nodes.entrypoints=game-server-tcp
+      - traefik.tcp.services.game_nodes.loadbalancer.server.port=25569
+
+  node_3:
+    image: game/server:latest
+    container_name: node_3
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+    environment:
+      - OWN_HOSTNAME=node_3.game_server
+      - FIRST_ID=4
+    networks:
+      - game_server
+    # Depends on first Node, so nodes dont start at the same time
+    depends_on:
+      - node_2
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=game_server
+
+      - traefik.udp.routers.game_nodes.entrypoints=game-server-udp
+      - traefik.udp.services.game_nodes.loadbalancer.server.port=25569
+
+      - traefik.tcp.routers.game_nodes.rule=HostSNI(`*`)
+      - traefik.tcp.routers.game_nodes.entrypoints=game-server-tcp
+      - traefik.tcp.services.game_nodes.loadbalancer.server.port=25569
+
+  node_4:
+    image: game/server:latest
+    container_name: node_4
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+    environment:
+      - OWN_HOSTNAME=node_4.game_server
+      - FIRST_ID=5
+    networks:
+      - game_server
+    # Depends on first Node, so nodes dont start at the same time
+    depends_on:
+      - node_3
     labels:
       - traefik.enable=true
       - traefik.docker.network=game_server

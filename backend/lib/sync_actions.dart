@@ -100,9 +100,17 @@ class NewClient extends SyncAction {
       : super(SyncType.newClient);
 
   factory NewClient.deserialize(Player player, Uint8List data) {
-    var connStr = utf8.decode(data);
-    var connAr = connStr.split(':');
-    return NewClient(int.parse(connAr[1]), InternetAddress(connAr[0]), player);
+    try {
+      var connStr = utf8.decode(data);
+      var connAr = connStr.split(':');
+      return NewClient(
+          int.parse(connAr[1]), InternetAddress(connAr[0]), player);
+    } on Exception catch (e) {
+      print(e);
+      print(player.serialize());
+      print(data);
+      exit(1);
+    }
   }
 
   @override

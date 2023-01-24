@@ -11,7 +11,7 @@ import 'package:shared_models/shared_models.dart';
 ///Class with all functions and Variables a GameNode need
 class Node {
   /// Monster count to spawn
-  static const monsterCount = 5;
+  static const monsterCount = 10;
 
   /// Count of Server Nodes
   static const nodes = 5;
@@ -112,7 +112,7 @@ class Node {
           if (network != null) {
             // After the First message spwan new Player
             var player = gameState!.spawnPlayer(nextId);
-            nextId += monsterCount;
+            nextId += nodes;
             // If no Player could be Spawned close Connection
             if (player == null) {
               client.destroy();
@@ -180,7 +180,7 @@ class Node {
   }
 
   /// Handle SyncActions from other nodes
-  void handleSync(SyncAction action, Socket node) {
+  void handleSync(SyncAction action, Socket node) async {
     print('Got Sync : ${action.type} from node ${node.remoteAddress.host}');
     if (action.type == SyncType.askGameState && gameState != null) {
       // Send GameState to node Asking
@@ -210,17 +210,16 @@ class Node {
     Entity? e;
     for (var row in gameState!.field) {
       for (var cell in row) {
-        if (cell != null &&
-            cell.runtimeType == Player &&
-            cell.playerId == action.entityId) {
+        if (cell != null && cell.playerId == action.entityId) {
           e = cell;
           break;
         }
-        if (e != null) {
-          break;
-        }
+      }
+      if (e != null) {
+        break;
       }
     }
+
     // maybe already dead
     if (e == null) {
       return;
@@ -242,7 +241,7 @@ class Node {
         if (gameState!.canMove(e as Player, action.dest, overrideRange: true)) {
           gameState!.move(e, action.dest);
         } else {
-          nodeSync.sendToAll(ServerMove(e.playerId, e.pos));
+          await nodeSync.sendToAll(ServerMove(e.playerId, e.pos));
         }
         break;
       default:
