@@ -6,8 +6,8 @@ import 'entity.dart';
 /// Class for a Monster
 class Monster extends Entity {
   Monster(int id, Point<int> pos) : super(id, pos, EntityType.monster) {
-    health = maxHealth = Random().nextInt(101) + 50;
-    ap = Random().nextInt(21) + 5;
+    health = maxHealth = Random().nextInt(51) + 50;
+    ap = Random().nextInt(16) + 5;
   }
 
   /// Constructor for deserialized Monster

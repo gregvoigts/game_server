@@ -9,8 +9,8 @@ class Player extends Entity {
     Point<int> pos,
   ) : super(playerId, pos, EntityType.player) {
     // Calculate Random health and ap
-    health = maxHealth = Random().nextInt(21) + 10;
-    ap = Random().nextInt(11) + 1;
+    health = maxHealth = Random().nextInt(11) + 10;
+    ap = Random().nextInt(10) + 1;
   }
 
   Player.deserilaized(
