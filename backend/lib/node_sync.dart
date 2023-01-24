@@ -10,7 +10,7 @@ class NodeSync {
 
   /// List of all the Hostnames of nodes
   Map<String, bool> nodeList = {
-    "127.0.0.1": true,
+    //"127.0.0.1": true,
     "game_server-node_0-1.game_server": false,
     "game_server-node_1-1.game_server": false,
     "game_server-node_2-1.game_server": false,

@@ -99,12 +99,11 @@ class Node {
     ClientInfo? c;
     //Listen to Socket
     client.listen(
-      (Uint8List data) {
+      (Uint8List data) async {
         var connStr = utf8.decode(data);
         var connAr = connStr.split(':');
         var port = int.parse(connAr[1]);
-        print(connStr);
-        if (connAr[0] == "localhost" || connAr[1] == "127.0.0.1") {
+        if (connAr[0] == "localhost" || connAr[0] == "127.0.0.1") {
           connAr[0] = "host.docker.internal";
         }
         // We excpect the First Message to be the clients UDP port
@@ -118,7 +117,8 @@ class Node {
               client.destroy();
               return;
             }
-            c = ClientInfo(InternetAddress(connAr[0]), client, player,
+            c = ClientInfo(
+                (await InternetAddress.lookup(connAr[0]))[0], client, player,
                 clientUdpPort: port);
             // Add client info and send the Updated Gamestate to all Clients
             network.addClient(c!);
