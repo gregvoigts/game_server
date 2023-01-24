@@ -109,8 +109,8 @@ class _MyHomePageState extends State<MyHomePage> implements Observer {
                     scrollDirection: Axis.horizontal,
                     crossAxisCount: 25,
                     children: List.generate(25 * 25, (index) {
-                      var x = index % 25;
-                      var y = ((index - x) / 25).round();
+                      var y = index % 25;
+                      var x = ((index - y) / 25).round();
                       var entity = widget.manager.state?.field[y][x];
                       return Container(
                         decoration: BoxDecoration(
