@@ -26,7 +26,7 @@ class Network {
   }
 
   /// helper function to send Data to all connected Clients
-  void _sendAll(List<int> data) async {
+  void _sendAll(List<int> data) {
     for (var client in clients) {
       if (!client.isOffline) {
         udpSocket.send(data, client.clientIp, client.clientUdpPort);
@@ -35,20 +35,20 @@ class Network {
   }
 
   /// send the GameState to all Clients
-  void sendGameState(GameState state) async {
+  void sendGameState(GameState state) {
     _sendAll(state.serialize());
   }
 
   /// Register callback to handle Actions from clients
   /// Extract client Info out of List
-  void listen(void Function(Action action, ClientInfo client) handle) {
-    udpSocket.listen((event) {
+  void listen(Future<void> Function(Action action, ClientInfo client) handle) {
+    udpSocket.listen((event) async {
       Datagram? datagram = udpSocket.receive();
       if (datagram == null) return;
       var action = Action.deserialize(datagram.data);
       var client = getClientInfo(action.playerId);
       if (client == null) return;
-      handle(action, client);
+      await handle(action, client);
     }, onError: (error) {
       print(error);
     });

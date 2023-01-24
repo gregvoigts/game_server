@@ -86,6 +86,7 @@ void main(List<String> arguments) async {
     print("Start $botsCount bots");
     for (int i = 0; i < botsCount; i++) {
       PlayerBot();
+      await Future.delayed(Duration(milliseconds: 10));
     }
   } else {
     print("Start normal Cli client");

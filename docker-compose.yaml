@@ -5,7 +5,7 @@ networks:
     name: game_server
 
 services:
-# First GameNode
+  # First GameNode
   node_0:
     image: game/server:latest
     build:
@@ -14,7 +14,7 @@ services:
     # Set First id for this Node and Hostname
     environment:
       - OWN_HOSTNAME=game_server-node_0-1.game_server
-      - FIRST_ID = 0
+      - FIRST_ID=1
     networks:
       - game_server
     labels:

@@ -83,10 +83,16 @@ class NodeSync {
   }
 
   // Send SyncAction to all Connected Nodes
-  void sendToAll(SyncAction action) {
+  Future<void> sendToAll(SyncAction action) async {
     for (var sock in nodes) {
-      print("send update to ${sock.remoteAddress.host}");
-      sock.add(action.serialize());
+      //print("send update to ${sock.remoteAddress.host}");
+      try {
+        sock.add(action.serialize());
+        await sock.flush();
+      } on Exception catch (e) {
+        print(e);
+        print(action.serialize());
+      }
     }
   }
 

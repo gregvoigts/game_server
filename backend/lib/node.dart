@@ -53,9 +53,10 @@ class Node {
         await RawDatagramSocket.bind(InternetAddress.anyIPv4, Network.udpPort));
 
     // Add action Handler to Network component
-    network.listen((action, client) {
-      handleAction(action, client);
+    network.listen((action, client) async {
+      var ret = await handleAction(action, client);
       network.sendGameState(gameState!);
+      return ret;
     });
   }
 
@@ -147,7 +148,7 @@ class Node {
   }
 
   /// Methode to handle Actions recieved from client
-  void handleAction(Action action, ClientInfo client) {
+  Future<void> handleAction(Action action, ClientInfo client) async {
     print('Got Action : ${action.type} from player ${client.player.playerId}');
     if (!gameState!.isValidPosition(action.destination)) return;
     Entity? target = gameState!.getField(action.destination);
@@ -156,17 +157,17 @@ class Node {
       case ActionType.heal:
         if (target == null || target.runtimeType != Player) break;
         target as Player;
-        nodeSync.sendToAll(ServerHeal(target.playerId, client.player.ap));
+        await nodeSync.sendToAll(ServerHeal(target.playerId, client.player.ap));
         gameState!.heal(client.player.ap, target);
         break;
       case ActionType.attack:
         if (target == null || target.runtimeType != Monster) break;
-        nodeSync.sendToAll(ServerHurt(target.playerId, client.player.ap));
+        await nodeSync.sendToAll(ServerHurt(target.playerId, client.player.ap));
         gameState!.attack(client.player.ap, target);
         break;
       case ActionType.move:
         if (target != null) break;
-        nodeSync
+        await nodeSync
             .sendToAll(ServerMove(client.player.playerId, action.destination));
         gameState!.move(client.player, action.destination);
         break;
@@ -175,7 +176,7 @@ class Node {
 
   /// Handle SyncActions from other nodes
   void handleSync(SyncAction action, Socket node) {
-    print('Got Sync : ${action.type} from node ${node.address.host}');
+    print('Got Sync : ${action.type} from node ${node.remoteAddress.host}');
     if (action.type == SyncType.askGameState && gameState != null) {
       // Send GameState to node Asking
       node.add(SendGamestate(gameState!).serialize());
@@ -200,6 +201,7 @@ class Node {
     }
     // Get Entity from Action by ID
     action as GameActionSync;
+    //print('Action for Player ${action.entityId}');
     Entity? e;
     for (var row in gameState!.field) {
       for (var cell in row) {
@@ -214,22 +216,26 @@ class Node {
         }
       }
     }
+    // maybe already dead
+    if (e == null) {
+      return;
+    }
     // Execute Actions on GameState
     switch (action.type) {
       case SyncType.heal:
         action as ServerHeal;
-        gameState!.heal(action.power, e! as Player);
+        gameState!.heal(action.power, e as Player);
         break;
       case SyncType.hurt:
         action as ServerHurt;
-        gameState!.attack(action.damage, e!);
+        gameState!.attack(action.damage, e);
         break;
       case SyncType.move:
         action as ServerMove;
         // if Move action isnt allowed
         // send command to revert move
-        if (gameState!.canMove(e! as Player, action.dest)) {
-          gameState!.move(e as Player, action.dest);
+        if (gameState!.canMove(e as Player, action.dest, overrideRange: true)) {
+          gameState!.move(e, action.dest);
         } else {
           nodeSync.sendToAll(ServerMove(e.playerId, e.pos));
         }
