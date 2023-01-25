@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
       title: 'Other LOL',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.black54,
       ),
       home: MyHomePage(),
     );
