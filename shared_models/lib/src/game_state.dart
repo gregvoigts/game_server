@@ -212,8 +212,9 @@ class GameState {
   /// Returns true if a move of player to newPos is allowed.
   bool canMove(Player player, Point<int> newPos, {bool overrideRange = false}) {
     var dist = Util.calcDistance(player.pos, newPos);
-    if ((dist > moveRange && !overrideRange) ||
-        field[newPos.y][newPos.x] != null) return false;
+    if ((!overrideRange && dist > moveRange) ||
+        (field[newPos.y][newPos.x] != null &&
+            field[newPos.y][newPos.x] != player)) return false;
 
     return true;
   }

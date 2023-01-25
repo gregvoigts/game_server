@@ -16,7 +16,7 @@ class Network {
   /// UDP Port of the Server
   static const port = 25569;
 
-  static int actionId = 0;
+  int actionId = 0;
 
   Queue<ResponseTime> responseTimes = Queue();
 

@@ -98,17 +98,23 @@ void main() {
       var moveSer = move.serialize();
       expect(moveSer[0] == move.destination.x, isTrue);
       expect(moveSer[1] == move.destination.y, isTrue);
-      expect(moveSer[2] == move.type.index, isTrue);
+      expect(moveSer[2] == move.playerId, isTrue);
+      expect(moveSer[3] == move.type.index, isTrue);
+      expect(moveSer[4] == move.actionId, isTrue);
 
       var healSer = heal.serialize();
       expect(healSer[0] == heal.destination.x, isTrue);
       expect(healSer[1] == heal.destination.y, isTrue);
-      expect(healSer[2] == heal.type.index, isTrue);
+      expect(healSer[2] == heal.playerId, isTrue);
+      expect(healSer[3] == heal.type.index, isTrue);
+      expect(healSer[4] == heal.actionId, isTrue);
 
       var attackSer = attack.serialize();
       expect(attackSer[0] == attack.destination.x, isTrue);
       expect(attackSer[1] == attack.destination.y, isTrue);
-      expect(attackSer[2] == attack.type.index, isTrue);
+      expect(attackSer[2] == attack.playerId, isTrue);
+      expect(attackSer[3] == attack.type.index, isTrue);
+      expect(attackSer[4] == attack.actionId, isTrue);
     });
 
     test('Test deserialize', () {
@@ -116,16 +122,22 @@ void main() {
       var moveDes = Action.deserialize(Uint8List.fromList(moveSer));
       expect(moveDes.destination == move.destination, isTrue);
       expect(moveDes.type == move.type, isTrue);
+      expect(moveDes.playerId == move.playerId, isTrue);
+      expect(moveDes.actionId == move.actionId, isTrue);
 
       var healSer = heal.serialize();
       var healDes = Action.deserialize(Uint8List.fromList(healSer));
       expect(healDes.destination == heal.destination, isTrue);
       expect(healDes.type == heal.type, isTrue);
+      expect(healDes.playerId == heal.playerId, isTrue);
+      expect(healDes.actionId == heal.actionId, isTrue);
 
       var attackSer = attack.serialize();
       var attackDes = Action.deserialize(Uint8List.fromList(attackSer));
       expect(attackDes.destination == attack.destination, isTrue);
       expect(attackDes.type == attack.type, isTrue);
+      expect(attackDes.playerId == attack.playerId, isTrue);
+      expect(attackDes.actionId == attack.actionId, isTrue);
     });
   });
 

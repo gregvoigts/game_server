@@ -28,11 +28,11 @@ abstract class Action {
   factory Action.deserialize(Uint8List data) {
     switch (ActionType.values[data[3]]) {
       case ActionType.attack:
-        return Attack(Point(data[0], data[1]), data[2], actionId: data[3]);
+        return Attack(Point(data[0], data[1]), data[2], actionId: data[4]);
       case ActionType.move:
-        return Move(Point(data[0], data[1]), data[2], actionId: data[3]);
+        return Move(Point(data[0], data[1]), data[2], actionId: data[4]);
       case ActionType.heal:
-        return Heal(Point(data[0], data[1]), data[2], actionId: data[3]);
+        return Heal(Point(data[0], data[1]), data[2], actionId: data[4]);
     }
   }
 }
