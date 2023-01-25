@@ -90,19 +90,29 @@ void main(List<String> arguments) async {
       bots.add(PlayerBot());
       await Future.delayed(Duration(milliseconds: 10));
     }
+
+    // aggregate statistics
     var rtts = <int>[];
     var noResp = 0;
     var sendActions = 0;
+    Map<ActionType, int> actionCounts = {};
     for (var bot in bots) {
       await bot.gameRunning;
       var res = bot.manager.getStatistics();
       rtts.addAll(res["RTTs"] as List<int>);
       noResp += res["noResp"] as int;
       sendActions += res["actionsSend"] as int;
+      (res["actionCounts"] as Map<ActionType, int>).forEach((key, value) {
+        actionCounts[key] = (actionCounts[key] ?? 0) + value;
+      });
     }
     var avgRTT = rtts.reduce((int val1, int val2) => val1 + val2) / rtts.length;
-    print(
-        'Stats: AvgRTT: $avgRTT, Actions send: $sendActions, Actions without Response: $noResp');
+    var stats =
+        'Stats: AvgRTT: $avgRTT \nActions send: $sendActions \nActions without Response: $noResp';
+    actionCounts.forEach((key, value) {
+      stats += '\n$key send: $value';
+    });
+    print(stats);
   } else {
     print("Start normal Cli client");
     GameManager manager = GameManager();

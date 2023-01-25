@@ -161,7 +161,15 @@ class Node {
   }
 
   void printStats() {
-    print('Actions recieved by this Node: ${network.actions}');
+    var stats = StringBuffer();
+    stats.write('Actions recieved by this Node: ${network.actions} (');
+    List<String> actionSegments = [];
+    network.actionCounts.forEach((key, value) {
+      actionSegments.add('$key: $value');
+    });
+    stats.writeAll(actionSegments, ', ');
+    stats.write(')');
+    print(stats);
   }
 
   /// Methode to handle Actions recieved from client

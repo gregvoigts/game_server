@@ -55,7 +55,8 @@ class GameManager extends Observable {
     var results = {
       "RTTs": rtts,
       "actionsSend": network!.actions,
-      "noResp": noResp
+      "noResp": noResp,
+      "actionCounts": network!.actionCounts
     };
     return results;
   }
@@ -134,6 +135,7 @@ class GameManager extends Observable {
     network!.sendAction(action);
   }
 
+  /// Overload of move but with a Vector instead of a direction
   void moveTo(Point<int> vec) {
     if (network == null) {
       return;

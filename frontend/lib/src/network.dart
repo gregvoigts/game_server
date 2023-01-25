@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -16,14 +14,21 @@ class Network {
   /// UDP Port of the Server
   static const port = 25569;
 
+  /// Id to temporarly distinguish the action froms other
   int actionId = 0;
+
+  /// counter of all send actions
+  int actions = 0;
+
+  /// action counter per actionType
+  Map<ActionType, int> actionCounts = {};
 
   Queue<ResponseTime> responseTimes = Queue();
 
   /// UDP Socket of the Client
   RawDatagramSocket socket;
 
-  /// Reverenz to the GameManager
+  /// Reference to the GameManager
   GameManager gm;
 
   Network(this.socket, this.gm) {
@@ -78,11 +83,10 @@ class Network {
     await tcpSocket.flush();
   }
 
-  int actions = 0;
-
   /// Send Action to Server with UDP
   void sendAction(Action action) {
     ++actions;
+    actionCounts[action.type] = (actionCounts[action.type] ?? 0) + 1;
     action.actionId = actionId;
     responseTimes.addFirst(ResponseTime(actionId));
     socket.send(action.serialize(), InternetAddress(host), port);

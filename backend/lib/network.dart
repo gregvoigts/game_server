@@ -1,8 +1,7 @@
-import 'dart:ffi';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:server/client_info.dart';
 import 'package:shared_models/shared_models.dart';
+import 'package:mutex/mutex.dart';
 
 /// Class handeling all UDP/TCP traffic to Clients
 class Network {
@@ -40,7 +39,10 @@ class Network {
     _sendAll(state.serialize());
   }
 
+  /// Action counters for statistics
   int actions = 0;
+  Map<ActionType, int> actionCounts = {};
+  Mutex countMut = Mutex();
 
   /// Register callback to handle Actions from clients
   /// Extract client Info out of List
@@ -52,6 +54,9 @@ class Network {
       var client = getClientInfo(action.playerId);
       if (client == null) return;
       ++actions;
+      await countMut.protect(() async {
+        actionCounts[action.type] = (actionCounts[action.type] ?? 0) + 1;
+      });
       await handle(action, client);
     }, onError: (error) {
       print(error);
