@@ -49,9 +49,9 @@ class Network {
       Datagram? datagram = udpSocket.receive();
       if (datagram == null) return;
       var action = Action.deserialize(datagram.data);
-      ++actions;
       var client = getClientInfo(action.playerId);
       if (client == null) return;
+      ++actions;
       await handle(action, client);
     }, onError: (error) {
       print(error);

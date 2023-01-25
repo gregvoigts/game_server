@@ -20,7 +20,7 @@ void main() {
       expect(ser[3] == monster.maxHealth, isTrue);
       expect(ser[4] == monster.pos.x, isTrue);
       expect(ser[5] == monster.pos.y, isTrue);
-      expect(ser[6] == 0, isTrue);
+      expect(ser[6] == monster.playerId, isTrue);
       expect(ser.length == 7, isTrue);
     });
 
@@ -78,7 +78,7 @@ void main() {
       expect(ser[0] == gameState.playerCount, isTrue);
       expect(ser[1] == gameState.monsterCount, isTrue);
       expect(ser[2] == (gameState.gameRunning ? 1 : 0), isTrue);
-      expect((ser.length - 3) % 9 == 0, isTrue);
+      expect((ser.length - 5) % 9 == 0, isTrue);
     });
 
     test('Test deserialize', () {
@@ -91,9 +91,9 @@ void main() {
   });
 
   group('Serialize/Deserialize Actions', () {
-    var move = Move(Point(2, 2), 1);
-    var heal = Heal(Point(3, 1), 1);
-    var attack = Attack(Point(4, 6), 1);
+    var move = Move(Point(2, 2), 1, actionId: 1);
+    var heal = Heal(Point(3, 1), 1, actionId: 2);
+    var attack = Attack(Point(4, 6), 1, actionId: 3);
     test('Test serialize', () {
       var moveSer = move.serialize();
       expect(moveSer[0] == move.destination.x, isTrue);

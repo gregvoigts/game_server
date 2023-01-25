@@ -33,9 +33,16 @@ class GameState {
   /// Whether the game is still/already running.
   bool gameRunning = true;
 
+  /// id of the clients Aktion
+  int actionId = 0;
+
+  /// id of the player executed the action
+  int playerId = 0;
+
   GameState();
 
-  GameState._private(this.playerCount, this.monsterCount, this.gameRunning);
+  GameState._private(this.playerCount, this.monsterCount, this.gameRunning,
+      this.actionId, this.playerId);
 
   /// Serialize GameState
   /// First add all int Values of the State
@@ -44,7 +51,8 @@ class GameState {
   /// Then add the ByteList for a serialized Entity
   List<int> serialize() {
     var list = List<int>.empty(growable: true);
-    list.addAll([playerCount, monsterCount, gameRunning ? 1 : 0]);
+    list.addAll(
+        [playerCount, monsterCount, gameRunning ? 1 : 0, actionId, playerId]);
     for (var yPos = 0; yPos < size; yPos++) {
       for (var xPos = 0; xPos < size; xPos++) {
         if (field[yPos][xPos] != null) {
@@ -60,8 +68,9 @@ class GameState {
   /// Every entity is exactly 9 Bytes
   /// 7 Bytes for the Entity 2 Bytes for the Position
   factory GameState.deserialize(Uint8List data) {
-    var gameState = GameState._private(data[0], data[1], data[2] == 1);
-    int index = 3;
+    var gameState =
+        GameState._private(data[0], data[1], data[2] == 1, data[3], data[4]);
+    int index = 5;
     while (index < data.length) {
       gameState.field[data[index]][data[index + 1]] =
           Entity.deserialize(data.sublist(index + 2, index + 9));

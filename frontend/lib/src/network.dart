@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:frontend/src/game_manager.dart';
+import 'package:frontend/src/response_time.dart';
 import 'package:shared_models/shared_models.dart';
 
 /// Class handels all network traffik for the Frontend
@@ -14,6 +16,10 @@ class Network {
   /// UDP Port of the Server
   static const port = 25569;
 
+  static int actionId = 0;
+
+  Queue<ResponseTime> responseTimes = Queue();
+
   /// UDP Socket of the Client
   RawDatagramSocket socket;
 
@@ -23,9 +29,19 @@ class Network {
   Network(this.socket, this.gm) {
     print(socket.port);
     socket.listen((event) {
+      int recTime = DateTime.now().millisecondsSinceEpoch;
       Datagram? datagram = socket.receive();
       if (datagram == null) return;
-      gm.handleDataUpdates(datagram.data);
+      var data = GameState.deserialize(datagram.data);
+      if (data.playerId == gm.playerId) {
+        for (var send in responseTimes) {
+          if (send.actionId == data.actionId) {
+            send.recieveTime = recTime;
+            break;
+          }
+        }
+      }
+      gm.handleDataUpdates(data);
     });
   }
 
@@ -67,6 +83,10 @@ class Network {
   /// Send Action to Server with UDP
   void sendAction(Action action) {
     ++actions;
+    action.actionId = actionId;
+    responseTimes.addFirst(ResponseTime(actionId));
     socket.send(action.serialize(), InternetAddress(host), port);
+    actionId++;
+    actionId = actionId % 256;
   }
 }

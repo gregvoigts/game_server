@@ -21,49 +21,50 @@ class CLI extends Observer {
 }
 
 class PlayerBot {
-  late GameManager _manager;
+  late GameManager manager;
+  late Future<void> gameRunning;
   PlayerBot() {
-    _manager = GameManager();
-    _manager.init();
-    _play();
+    manager = GameManager();
+    manager.init();
+    gameRunning = _play();
   }
 
-  void _play() async {
+  Future<void> _play() async {
     // Wait until game is loaded
-    while (_manager.state == null) {
+    while (manager.state == null) {
       await Future.delayed(const Duration(seconds: 2));
     }
     // Start gameloop
-    while (_manager.state?.gameRunning ?? false) {
+    while (manager.state?.gameRunning ?? false) {
       await Future.delayed(Duration(seconds: Random().nextInt(3) + 3));
-      if (_manager.state != null) {
-        var own = _manager.getOwn();
+      if (manager.state != null) {
+        var own = manager.getOwn();
         if (own == null) {
           return;
         }
         // Try to heal player with 50% hp or less
         var healTarget =
-            _manager.getFirstInRange<Player>(own.pos, GameState.healRange);
+            manager.getFirstInRange<Player>(own.pos, GameState.healRange);
         if (healTarget != null &&
             healTarget.health <= healTarget.maxHealth * 0.5) {
-          _manager.heal(healTarget.pos);
+          manager.heal(healTarget.pos);
           continue;
         }
 
         // Then find the closest monster
-        var target = _manager.getFirstInRange<Monster>(own.pos, -1);
+        var target = manager.getFirstInRange<Monster>(own.pos, -1);
         if (target != null) {
           // and attack if in range ...
           if (Util.calcDistance(own.pos, target.pos) <= GameState.attackRange) {
-            _manager.attack(target.pos);
+            manager.attack(target.pos);
             continue;
           }
           // or move closer to the monster
           var moves = target.pos - own.pos;
           if (moves.x.abs() > moves.y.abs()) {
-            _manager.moveTo(Point((moves.x / moves.x.abs()).ceil(), 0));
+            manager.moveTo(Point((moves.x / moves.x.abs()).ceil(), 0));
           } else {
-            _manager.moveTo(Point(0, (moves.y / moves.y.abs()).ceil()));
+            manager.moveTo(Point(0, (moves.y / moves.y.abs()).ceil()));
           }
         }
         // there should at least be a monster to move to...
@@ -84,10 +85,24 @@ void main(List<String> arguments) async {
       exit(1);
     }
     print("Start $botsCount bots");
+    List<PlayerBot> bots = [];
     for (int i = 0; i < botsCount; i++) {
-      PlayerBot();
+      bots.add(PlayerBot());
       await Future.delayed(Duration(milliseconds: 10));
     }
+    var rtts = <int>[];
+    var noResp = 0;
+    var sendActions = 0;
+    for (var bot in bots) {
+      await bot.gameRunning;
+      var res = bot.manager.getStatistics();
+      rtts.addAll(res["RTTs"] as List<int>);
+      noResp += res["noResp"] as int;
+      sendActions += res["actionsSend"] as int;
+    }
+    var avgRTT = rtts.reduce((int val1, int val2) => val1 + val2) / rtts.length;
+    print(
+        'Stats: AvgRTT: $avgRTT, Actions send: $sendActions, Actions without Response: $noResp');
   } else {
     print("Start normal Cli client");
     GameManager manager = GameManager();

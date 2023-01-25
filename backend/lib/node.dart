@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:mutex/mutex.dart';
 import 'package:server/client_info.dart';
 import 'package:server/network.dart';
 import 'package:server/node_sync.dart';
@@ -41,6 +43,8 @@ class Node {
     }
   }
 
+  var sendToClientMut = Mutex();
+
   ///Function to Start the Servers GameLoop
   ///Server listens for new Players over TCP
   ///and for Client Actions over UDP
@@ -55,7 +59,11 @@ class Node {
     // Add action Handler to Network component
     network.listen((action, client) async {
       var ret = await handleAction(action, client);
-      network.sendGameState(gameState!);
+      await sendToClientMut.protect<void>(() async {
+        gameState!.actionId = action.actionId;
+        gameState!.playerId = action.playerId;
+        network.sendGameState(gameState!);
+      });
       return ret;
     });
   }
@@ -152,6 +160,10 @@ class Node {
     );
   }
 
+  void printStats() {
+    print('Actions recieved by this Node: ${network.actions}');
+  }
+
   /// Methode to handle Actions recieved from client
   Future<void> handleAction(Action action, ClientInfo client) async {
     print('Got Action : ${action.type} from player ${client.player.playerId}');
@@ -183,6 +195,9 @@ class Node {
             .sendToAll(ServerMove(client.player.playerId, action.destination));
         gameState!.move(client.player, action.destination);
         break;
+    }
+    if (!gameState!.gameRunning) {
+      printStats();
     }
   }
 
@@ -257,6 +272,10 @@ class Node {
         break;
       default:
         assert(false, "Never reached");
+    }
+
+    if (!gameState!.gameRunning) {
+      printStats();
     }
   }
 }

@@ -17,6 +17,8 @@ class GameManager extends Observable {
   /// Player id of this Client
   int? _playerId;
 
+  void Function(Map<dynamic, dynamic> results)? onFinish;
+
   /// Initialize the Network component
   void init() async {
     network = Network(
@@ -26,19 +28,36 @@ class GameManager extends Observable {
 
   GameState? get state => _state;
 
-  set playerId(int value) {
+  set playerId(int? value) {
     _playerId = value;
     notify();
   }
 
+  int? get playerId => _playerId;
+
   /// handels Gamestates recieved from Server
   /// Sends update to UI
-  void handleDataUpdates(Uint8List data) async {
-    _state = GameState.deserialize(data);
-    if (!_state!.gameRunning) {
-      print('actions received ${network!.actions}');
-    }
+  void handleDataUpdates(GameState data) async {
+    _state = data;
     notify();
+  }
+
+  Map<String, Object> getStatistics() {
+    var rtts = <int>[];
+    var noResp = 0;
+    for (var respTime in network!.responseTimes) {
+      if (respTime.recieveTime == null) {
+        noResp++;
+      } else {
+        rtts.add(respTime.recieveTime! - respTime.sendTime);
+      }
+    }
+    var results = {
+      "RTTs": rtts,
+      "actionsSend": network!.actions,
+      "noResp": noResp
+    };
+    return results;
   }
 
   bool isMe(int playerId) {
