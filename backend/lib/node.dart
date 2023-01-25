@@ -167,6 +167,13 @@ class Node {
         break;
       case ActionType.attack:
         if (target == null || target.runtimeType != Monster) break;
+        target as Monster;
+        // if the monster is due to counter attack
+        if (target.attackCooldown <= 0) {
+          await nodeSync.sendToAll(ServerPlayerHurt(
+              client.player.playerId, target.ap, target.playerId));
+          gameState!.attack(target.ap, client.player);
+        }
         await nodeSync.sendToAll(ServerHurt(target.playerId, client.player.ap));
         gameState!.attack(client.player.ap, target);
         break;
@@ -207,41 +214,45 @@ class Node {
     // Get Entity from Action by ID
     action as GameActionSync;
     //print('Action for Player ${action.entityId}');
-    Entity? e;
-    for (var row in gameState!.field) {
-      for (var cell in row) {
-        if (cell != null && cell.playerId == action.entityId) {
-          e = cell;
-          break;
-        }
-      }
-      if (e != null) {
-        break;
-      }
-    }
-
+    Entity? entity = gameState!.find(action.entityId);
     // maybe already dead
-    if (e == null) {
+    if (entity == null) {
       return;
     }
     // Execute Actions on GameState
     switch (action.type) {
       case SyncType.heal:
         action as ServerHeal;
-        gameState!.heal(action.power, e as Player);
+        gameState!.heal(action.power, entity as Player);
         break;
       case SyncType.hurt:
         action as ServerHurt;
-        gameState!.attack(action.damage, e);
+        gameState!.attack(action.damage, entity);
+        if (entity.runtimeType == Monster && entity.health > 0) {
+          (entity as Monster).attackCooldown--;
+        }
+        break;
+      case SyncType.playerHurt:
+        action as ServerPlayerHurt;
+        Entity? monster = gameState!.find(action.actorId);
+        if (monster != null &&
+            monster.runtimeType == Monster &&
+            monster.health > 0) {
+          monster as Monster;
+          monster.attackCooldown += monster.maxAttackCooldown;
+        }
+
+        gameState!.attack(action.damage, entity);
         break;
       case SyncType.move:
         action as ServerMove;
         // if Move action isnt allowed
         // send command to revert move
-        if (gameState!.canMove(e as Player, action.dest, overrideRange: true)) {
-          gameState!.move(e, action.dest);
+        if (gameState!
+            .canMove(entity as Player, action.dest, overrideRange: true)) {
+          gameState!.move(entity, action.dest);
         } else {
-          await nodeSync.sendToAll(ServerMove(e.playerId, e.pos));
+          await nodeSync.sendToAll(ServerMove(entity.playerId, entity.pos));
         }
         break;
       default:

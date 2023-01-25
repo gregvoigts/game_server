@@ -132,6 +132,20 @@ class GameState {
     return null;
   }
 
+  /// find the first occurence of entityId on the field
+  ///
+  /// Returns null if the entity can't be found
+  Entity? find(int entityId) {
+    for (var row in field) {
+      for (var cell in row) {
+        if (cell != null && cell.playerId == entityId) {
+          return cell;
+        }
+      }
+    }
+    return null;
+  }
+
   /// Executes an attack from attacker to attacked.
   ///
   /// Updates monster/player count if the attacked died.

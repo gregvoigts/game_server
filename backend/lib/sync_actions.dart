@@ -21,6 +21,8 @@ abstract class SyncAction {
     switch (SyncType.values[data[0]]) {
       case SyncType.hurt:
         return ServerHurt(data[1], data[2]);
+      case SyncType.playerHurt:
+        return ServerPlayerHurt(data[1], data[2], data[3]);
       case SyncType.move:
         return ServerMove(data[1], Point(data[2], data[3]));
       case SyncType.heal:
@@ -80,6 +82,19 @@ class ServerHurt extends GameActionSync {
   }
 }
 
+class ServerPlayerHurt extends GameActionSync {
+  int damage;
+  int actorId;
+
+  ServerPlayerHurt(int entityId, this.damage, this.actorId)
+      : super(entityId, SyncType.playerHurt);
+
+  @override
+  List<int> serialize() {
+    return [...super.serialize(), entityId, damage, actorId];
+  }
+}
+
 class ServerHeal extends GameActionSync {
   int power;
 
@@ -123,4 +138,12 @@ class NewClient extends SyncAction {
   }
 }
 
-enum SyncType { gameState, move, hurt, heal, newClient, askGameState }
+enum SyncType {
+  gameState,
+  move,
+  hurt,
+  playerHurt,
+  heal,
+  newClient,
+  askGameState
+}
