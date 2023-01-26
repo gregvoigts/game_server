@@ -59,12 +59,13 @@ class Node {
     // Add action Handler to Network component
     network.listen((action, client) async {
       var ret = await handleAction(action, client);
-      await sendToClientMut.protect<void>(() async {
-        gameState!.actionId = action.actionId;
-        gameState!.playerId = action.playerId;
-        network.sendGameState(gameState!);
-      });
-      return ret;
+      if (ret) {
+        await sendToClientMut.protect<void>(() async {
+          gameState!.actionId = action.actionId;
+          gameState!.playerId = action.playerId;
+          network.sendGameState(gameState!);
+        });
+      }
     });
   }
 
@@ -173,21 +174,27 @@ class Node {
   }
 
   /// Methode to handle Actions recieved from client
-  Future<void> handleAction(Action action, ClientInfo client) async {
+  Future<bool> handleAction(Action action, ClientInfo client) async {
     print('Got Action : ${action.type} from player ${client.player.playerId}');
-    if (!gameState!.isValidPosition(action.destination)) return;
+    if (!gameState!.isValidPosition(action.destination)) return false;
     Entity? target = gameState!.getField(action.destination);
 
     switch (action.type) {
       case ActionType.heal:
-        if (target == null || target.runtimeType != Player) break;
+        if (target == null || target.runtimeType != Player) return false;
         target as Player;
+        if (!gameState!.canHeal(client.player, target)) {
+          return false;
+        }
         await nodeSync.sendToAll(ServerHeal(target.playerId, client.player.ap));
         gameState!.heal(client.player.ap, target);
         break;
       case ActionType.attack:
-        if (target == null || target.runtimeType != Monster) break;
+        if (target == null || target.runtimeType != Monster) return false;
         target as Monster;
+        if (!gameState!.canAttack(client.player, target)) {
+          return false;
+        }
         // if the monster is due to counter attack
         if (target.attackCooldown <= 0) {
           await nodeSync.sendToAll(ServerPlayerHurt(
@@ -198,7 +205,10 @@ class Node {
         gameState!.attack(client.player.ap, target);
         break;
       case ActionType.move:
-        if (target != null) break;
+        if (target != null) return false;
+        if (!gameState!.canMove(client.player, action.destination)) {
+          return false;
+        }
         await nodeSync
             .sendToAll(ServerMove(client.player.playerId, action.destination));
         gameState!.move(client.player, action.destination);
@@ -207,6 +217,7 @@ class Node {
     if (!gameState!.gameRunning) {
       printStats();
     }
+    return true;
   }
 
   /// Handle SyncActions from other nodes
