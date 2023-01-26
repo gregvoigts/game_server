@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       title: 'Other LOL',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.black54,
+        scaffoldBackgroundColor: Colors.grey.shade900,
       ),
       home: MyHomePage(),
     );
@@ -115,8 +115,7 @@ class _MyHomePageState extends State<MyHomePage> implements Observer {
                       var entity = widget.manager.state?.field[y][x];
                       return Container(
                         decoration: BoxDecoration(
-                          border: Border.all(),
-                        ),
+                            border: Border.all(color: Colors.white)),
                         child: EntityView(
                           entity: entity,
                           manager: widget.manager,
@@ -131,6 +130,7 @@ class _MyHomePageState extends State<MyHomePage> implements Observer {
                       width: 500,
                       child: TextField(
                         controller: controller,
+                        style: const TextStyle(color: Colors.white),
                       )),
                   ElevatedButton(
                     onPressed: sendCommand,

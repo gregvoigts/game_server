@@ -14,13 +14,13 @@ class EntityView extends StatelessWidget {
     if (entity != null) {
       var health = entity!.health * 1.0 / entity!.maxHealth;
       if (health < 0.3) {
-        return Colors.red;
+        return Colors.redAccent.shade700;
       }
       if (health < 0.7) {
-        return Colors.orange;
+        return Colors.orange.shade700;
       }
     }
-    return Colors.green;
+    return Colors.lightGreenAccent.shade400;
   }
 
   String getIdentifier() {
