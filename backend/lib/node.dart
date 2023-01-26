@@ -13,7 +13,7 @@ import 'package:shared_models/shared_models.dart';
 ///Class with all functions and Variables a GameNode need
 class Node {
   /// Monster count to spawn
-  static const monsterCount = 10;
+  static const monsterCount = 20;
 
   /// Count of Server Nodes
   static const nodes = 5;
