@@ -118,28 +118,23 @@ class Node {
         }
         // We excpect the First Message to be the clients UDP port
         if (isFirst) {
-          if (network != null) {
-            // After the First message spwan new Player
-            var player = gameState!.spawnPlayer(nextId);
-            nextId += nodes;
-            // If no Player could be Spawned close Connection
-            if (player == null) {
-              client.destroy();
-              return;
-            }
-            c = ClientInfo(
-                (await InternetAddress.lookup(connAr[0]))[0], client, player,
-                clientUdpPort: port);
-            // Add client info and send the Updated Gamestate to all Clients
-            network.addClient(c!);
-            network.sendGameState(gameState!);
-            nodeSync
-                .sendToAll(NewClient(c!.clientUdpPort, c!.clientIp, player));
-            print('addedclient with ID ${player.playerId}');
-          } else {
-            // If the Network isnt
+          // After the First message spwan new Player
+          var player = gameState!.spawnPlayer(nextId);
+          nextId += nodes;
+          // If no Player could be Spawned close Connection
+          if (player == null) {
             client.destroy();
+            return;
           }
+          c = ClientInfo(
+              (await InternetAddress.lookup(connAr[0]))[0], client, player,
+              clientUdpPort: port);
+          // Add client info and send the Updated Gamestate to all Clients
+          network.addClient(c!);
+          network.sendGameState(gameState!);
+          nodeSync.sendToAll(NewClient(c!.clientUdpPort, c!.clientIp, player));
+          print('addedclient with ID ${player.playerId}');
+
           isFirst = false;
         } else {
           print(data);
@@ -163,13 +158,13 @@ class Node {
 
   void printStats() {
     var stats = StringBuffer();
-    stats.write('Actions recieved by this Node: ${network.actions} (');
+    stats.write(
+        'Actions recieved by this Node: ${network.actions}\nOverall actions recieved:');
     List<String> actionSegments = [];
-    network.actionCounts.forEach((key, value) {
-      actionSegments.add('$key: $value');
+    gameState!.actionCounts.forEach((key, value) {
+      actionSegments.add('\n$key: $value');
     });
     stats.writeAll(actionSegments, ', ');
-    stats.write(')');
     print(stats);
   }
 

@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:typed_data';
-
 import 'package:shared_models/shared_models.dart';
 
 /// Represents a gamestate.
@@ -38,6 +37,14 @@ class GameState {
 
   /// id of the player executed the action
   int playerId = 0;
+
+  /// statistics of the actions
+  Map<String, int> actionCounts = {
+    'moves': 0,
+    'heals': 0,
+    'player_attacks': 0,
+    'monster_attacks': 0,
+  };
 
   GameState();
 
@@ -175,6 +182,10 @@ class GameState {
         gameRunning = false;
       }
     }
+    var key = attacked.type == EntityType.monster
+        ? 'player_attacks'
+        : 'monster_attacks';
+    actionCounts[key] = actionCounts[key]! + 1;
   }
 
   /// Returns true an attack from attacker against attacked is allowed.
@@ -190,6 +201,7 @@ class GameState {
   /// Does not check if a heal is allowed!
   void heal(int power, Player healed) {
     healed.heal(power);
+    actionCounts['heals'] = actionCounts['heals']! + 1;
   }
 
   /// Returns true if healer can heal healed.
@@ -207,6 +219,7 @@ class GameState {
     field[player.pos.y][player.pos.x] = null;
     player.pos = newPos;
     field[newPos.y][newPos.x] = player;
+    actionCounts['moves'] = actionCounts['moves']! + 1;
   }
 
   /// Returns true if a move of player to newPos is allowed.
